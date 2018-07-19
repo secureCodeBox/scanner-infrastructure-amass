@@ -1,11 +1,11 @@
 package main
 
 import (
-	"./ScannerScaffolding"
 	"fmt"
 	"github.com/caffix/amass/amass"
 	"github.com/nu7hatch/gouuid"
 	"github.com/op/go-logging"
+	"github.com/secureCodeBox/scanner-infrastructure-amass/ScannerScaffolding"
 	"math/rand"
 	"net"
 	"os"
