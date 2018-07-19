@@ -31,7 +31,7 @@ func createJobFailure(jobId string) ScannerScaffolding.JobFailure {
 
 func workOnJobs(jobs <-chan ScannerScaffolding.ScanJob, results chan<- ScannerScaffolding.JobResult, failures chan<- ScannerScaffolding.JobFailure) {
 	for job := range jobs {
-		log.Info("Working on job'%s'", job.JobId)
+		log.Infof("Working on job'%s'", job.JobId)
 
 		output := make(chan *amass.AmassOutput)
 
