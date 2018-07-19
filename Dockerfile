@@ -14,6 +14,10 @@ FROM alpine
 COPY --from=builder /usr/local/go/src/github.com/j12934/secureCodeBox/main /securecodebox/
 RUN chmod +x /securecodebox/main
 
+ARG COMMIT_ID=unkown
+ARG REPOSITORY_URL=unkown
+ARG BRANCH=unkown
+
 ENV SCB_COMMIT_ID ${COMMIT_ID}
 ENV SCB_REPOSITORY_URL ${REPOSITORY_URL}
 ENV SCB_BRANCH ${BRANCH}
