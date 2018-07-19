@@ -195,9 +195,46 @@ func (scanner ScannerScaffolding) sendResults(jobId string, result Result) {
 	}
 }
 
+func (scanner ScannerScaffolding) sendFailure(failure JobFailure) {
+	errorPayload := ScanError{
+		ScannerId:    scanner.ScannerId,
+		ErrorMessage: failure.ErrorMessage,
+		ErrorDetails: failure.ErrorDetails,
+	}
+
+	jsonBytes, err := json.Marshal(errorPayload)
+
+	if err != nil {
+		log.Criticalf("Failed to encode error object of job '%s' as json", failure.JobId)
+	}
+	res, err := http.Post(
+		scanner.EngineUrl+"/box/jobs/"+failure.JobId+"/failure",
+		"application/json",
+		bytes.NewBuffer(jsonBytes),
+	)
+
+	if err != nil {
+		log.Errorf("Failed to send request for failure of job '%s'", failure.JobId)
+	}
+
+	status := strings.Trim(res.Status, " ")
+
+	switch status {
+	case "200":
+		log.Infof("Successfully submitted failure report of job '%s'", failure.JobId)
+	case "400":
+		log.Warningf("Invalid Response / Request from engine while submitting failure report for job '%s'", failure.JobId)
+	case "500":
+		log.Warningf("Encountered 500 Response Code from Engine while submitting failure report for job '%s'", failure.JobId)
+	default:
+		log.Errorf("Got an unexpected response code ('%s') from engine while submitting failure report.", status)
+	}
+}
+
 func (scanner ScannerScaffolding) submitFailures() {
 	for failure := range scanner.Failures {
-		log.Criticalf("TODO: Submitting failure for Job '%s'", failure.JobId)
+		log.Infof("Submitting failure for Job '%s'", failure.JobId)
+		scanner.sendFailure(failure)
 	}
 }
 
