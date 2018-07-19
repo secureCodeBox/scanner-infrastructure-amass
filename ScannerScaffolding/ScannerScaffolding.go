@@ -217,9 +217,9 @@ func (scanner ScannerScaffolding) logConfiguration() {
 
 	log.Info()
 	log.Info("Build:")
-	log.Infof("Commit: \t%s", env("SCB_COMMIT_ID", "unkown"))
-	log.Infof("Repository: \t%s", env("SCB_REPOSITORY_URL", "unkown"))
-	log.Infof("Branch: \t%s", env("SCB_BRANCH", "unkown"))
+	log.Infof("Commit: \t%s", env("SCB_COMMIT_ID", "unknown"))
+	log.Infof("Repository: \t%s", env("SCB_REPOSITORY_URL", "unknown"))
+	log.Infof("Branch: \t%s", env("SCB_BRANCH", "unknown"))
 }
 
 func CreateJobConnection(engineUrl, taskName, scannerType string) ScannerScaffolding {
