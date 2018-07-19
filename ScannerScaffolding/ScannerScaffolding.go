@@ -89,9 +89,9 @@ func env(key, defaultValue string) string {
 	return defaultValue
 }
 
-func fetchJob(scannerId, taskName string) *ScanJob {
+func (scanner ScannerScaffolding) fetchJob() *ScanJob {
 	res, err := http.Post(
-		"http://localhost:8080/box/jobs/lock/"+taskName+"/"+scannerId,
+		scanner.EngineUrl+"/box/jobs/lock/"+scanner.TaskName+"/"+scanner.ScannerId,
 		"application/json",
 		bytes.NewBuffer([]byte{}),
 	)
@@ -110,8 +110,10 @@ func fetchJob(scannerId, taskName string) *ScanJob {
 		return nil
 	case "400":
 		log.Warning("Invalid Response / Request to engine while fetching a new job.")
+		return nil
 	case "500":
 		log.Warning("Encountered 500 Response Code from Engine while fetching a new job.")
+		return nil
 	}
 
 	body, err := ioutil.ReadAll(res.Body)
@@ -135,7 +137,7 @@ func fetchJob(scannerId, taskName string) *ScanJob {
 
 func (scanner ScannerScaffolding) pullJobs() {
 	for {
-		scanJob := fetchJob(scanner.ScannerId, scanner.TaskName)
+		scanJob := scanner.fetchJob()
 
 		if scanJob != nil {
 			scanner.Jobs <- *scanJob
@@ -150,7 +152,7 @@ func (scanner ScannerScaffolding) submitResults() {
 	for result := range scanner.Results {
 		log.Infof("Submitting result for Job '%s'\n", result.JobId)
 
-		sendResults(
+		scanner.sendResults(
 			result.JobId,
 			Result{
 				Findings:    result.Findings,
@@ -162,7 +164,7 @@ func (scanner ScannerScaffolding) submitResults() {
 	}
 }
 
-func sendResults(jobId string, result Result) {
+func (scanner ScannerScaffolding) sendResults(jobId string, result Result) {
 	jsonBytes, err := json.Marshal(result)
 
 	if err != nil {
@@ -170,7 +172,7 @@ func sendResults(jobId string, result Result) {
 	}
 
 	res, err := http.Post(
-		"http://localhost:8080/box/jobs/"+jobId+"/result",
+		scanner.EngineUrl+"/box/jobs/"+jobId+"/result",
 		"application/json",
 		bytes.NewBuffer(jsonBytes),
 	)
