@@ -82,11 +82,13 @@ type ScannerScaffolding struct {
 	StartedAt      time.Time
 	InitialTestRun TestRun
 	TaskStatus     *TaskStatus
+	EngineStatus   *EngineStatus
 }
 
 type TestRun struct {
-	Version string `json:"version"`
-	TestRun string `json:"testRun"`
+	Version    string `json:"version"`             // Version of Scanner
+	Details    string `json:"test_run_details"`    // Description of the Test run. How was it performed?
+	Successful bool   `json:"test_run_successful"` // Was the test run successful?
 }
 
 type ScannerConfiguration struct {
@@ -103,7 +105,8 @@ type TaskStatus struct {
 }
 
 type EngineStatus struct {
-	LastSuccessfulConnection *time.Time `json:"last_successful_connection"`
+	LastSuccessfulConnection      time.Time `json:"last_successful_connection"`
+	HadSuccessfulEngineConnection bool      `json:"had_successful_connection"`
 }
 
 type BuildConfiguration struct {
@@ -148,6 +151,7 @@ func (scanner ScannerScaffolding) fetchJob() *ScanJob {
 	switch status {
 	case "204":
 		log.Debug("No jobs available. Going to sleep.")
+		scanner.logSuccessfulEngineConnection()
 		return nil
 	case "400":
 		log.Warning("Invalid Response / Request to engine while fetching a new job.")
@@ -156,6 +160,8 @@ func (scanner ScannerScaffolding) fetchJob() *ScanJob {
 		log.Warning("Encountered 500 Response Code from Engine while fetching a new job.")
 		return nil
 	}
+
+	scanner.logSuccessfulEngineConnection()
 
 	body, err := ioutil.ReadAll(res.Body)
 
@@ -230,6 +236,7 @@ func (scanner ScannerScaffolding) sendResults(jobId string, result Result) {
 	case "200":
 		log.Infof("Successfully submitted result of job '%s'", jobId)
 		scanner.TaskStatus.Completed++
+		scanner.logSuccessfulEngineConnection()
 	case "400":
 		log.Warningf("Invalid Response / Request from engine while submitting result for job '%s'", jobId)
 		scanner.TaskStatus.Failed++
@@ -271,6 +278,7 @@ func (scanner ScannerScaffolding) sendFailure(failure JobFailure) {
 	switch status {
 	case "200":
 		log.Infof("Successfully submitted failure report of job '%s'", failure.JobId)
+		scanner.logSuccessfulEngineConnection()
 	case "400":
 		log.Warningf("Invalid Response / Request from engine while submitting failure report for job '%s'", failure.JobId)
 	case "500":
@@ -298,7 +306,8 @@ func (scanner ScannerScaffolding) logConfiguration() {
 	log.Info()
 	log.Info("Scanner Status:")
 
-	log.Infof("Test Run: %s\t", scanner.InitialTestRun.TestRun)
+	log.Infof("Test Run Successful: %s\t", scanner.InitialTestRun.Successful)
+	log.Infof("Test Run Details: %s\t", scanner.InitialTestRun.Details)
 	log.Infof("Version: %s\t", scanner.InitialTestRun.Version)
 
 	log.Info()
@@ -308,15 +317,30 @@ func (scanner ScannerScaffolding) logConfiguration() {
 	log.Infof("Branch: \t%s", env("SCB_BRANCH", "unknown"))
 }
 
+func (scanner ScannerScaffolding) logSuccessfulEngineConnection() {
+	scanner.EngineStatus.LastSuccessfulConnection = time.Now()
+	scanner.EngineStatus.HadSuccessfulEngineConnection = true
+}
+
+func (scanner ScannerScaffolding) healthyStatus() string {
+	if scanner.isHealthy() {
+		return "UP"
+	} else {
+		return "DOWN"
+	}
+}
+
+func (scanner ScannerScaffolding) isHealthy() bool {
+	return scanner.EngineStatus.HadSuccessfulEngineConnection && scanner.InitialTestRun.Successful
+}
+
 func (scanner ScannerScaffolding) generateScannerStatus() ScannerStatus {
 	return ScannerStatus{
-		StartedAt:   scanner.StartedAt,
-		WorkerId:    scanner.ScannerId,
-		Healthcheck: "",
-		TaskStatus:  *scanner.TaskStatus,
-		EngineStatus: EngineStatus{
-			LastSuccessfulConnection: nil,
-		},
+		StartedAt:     scanner.StartedAt,
+		WorkerId:      scanner.ScannerId,
+		Healthcheck:   scanner.healthyStatus(),
+		TaskStatus:    *scanner.TaskStatus,
+		EngineStatus:  *scanner.EngineStatus,
 		ScannerStatus: scanner.InitialTestRun,
 		BuildConfiguration: BuildConfiguration{
 			CommitId:      env("SCB_COMMIT_ID", "unknown"),
@@ -329,7 +353,14 @@ func (scanner ScannerScaffolding) generateScannerStatus() ScannerStatus {
 func statusPageHandler(scanner *ScannerScaffolding) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Info("Handling status site request")
+
 		w.Header().Add("Content-Type", "application/json")
+		if scanner.isHealthy() {
+			w.WriteHeader(http.StatusOK)
+		} else {
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+
 		json.NewEncoder(w).Encode(scanner.generateScannerStatus())
 	}
 }
@@ -361,6 +392,10 @@ func CreateJobConnection(configuration ScannerConfiguration) ScannerScaffolding 
 			Started:   0,
 			Completed: 0,
 			Failed:    0,
+		},
+		EngineStatus: &EngineStatus{
+			LastSuccessfulConnection:      time.Unix(0, 0),
+			HadSuccessfulEngineConnection: false,
 		},
 	}
 

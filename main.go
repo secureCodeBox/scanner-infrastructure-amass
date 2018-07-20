@@ -117,8 +117,9 @@ func workOnJobs(jobs <-chan ScannerScaffolding.ScanJob, results chan<- ScannerSc
 
 func testScannerFunctionality() ScannerScaffolding.TestRun {
 	return ScannerScaffolding.TestRun{
-		Version: amass.Version,
-		TestRun: "Not feasible",
+		Version:    amass.Version,
+		Details:    "Not feasible",
+		Successful: true,
 	}
 }
 
