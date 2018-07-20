@@ -307,7 +307,7 @@ func (scanner ScannerScaffolding) logConfiguration() {
 	log.Info()
 	log.Info("Scanner Status:")
 
-	log.Infof("Test Run Successful: %s\t", scanner.InitialTestRun.Successful)
+	log.Infof("Test Run Successful: %v\t", scanner.InitialTestRun.Successful)
 	log.Infof("Test Run Details: %s\t", scanner.InitialTestRun.Details)
 	log.Infof("Version: %s\t", scanner.InitialTestRun.Version)
 
