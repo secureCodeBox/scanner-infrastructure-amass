@@ -81,6 +81,7 @@ type ScannerScaffolding struct {
 
 	StartedAt      time.Time
 	InitialTestRun TestRun
+	TaskStatus     *TaskStatus
 }
 
 type TestRun struct {
@@ -102,7 +103,7 @@ type TaskStatus struct {
 }
 
 type EngineStatus struct {
-	LastSuccessfulConnection time.Time `json:"last_successful_connection"`
+	LastSuccessfulConnection *time.Time `json:"last_successful_connection"`
 }
 
 type BuildConfiguration struct {
@@ -172,6 +173,8 @@ func (scanner ScannerScaffolding) fetchJob() *ScanJob {
 		return nil
 	}
 
+	scanner.TaskStatus.Started = scanner.TaskStatus.Started + 1
+
 	return &scanJob
 }
 
@@ -226,16 +229,22 @@ func (scanner ScannerScaffolding) sendResults(jobId string, result Result) {
 	switch status {
 	case "200":
 		log.Infof("Successfully submitted result of job '%s'", jobId)
+		scanner.TaskStatus.Completed++
 	case "400":
 		log.Warningf("Invalid Response / Request from engine while submitting result for job '%s'", jobId)
+		scanner.TaskStatus.Failed++
 	case "500":
 		log.Warningf("Encountered 500 Response Code from Engine while submitting result for job '%s'", jobId)
+		scanner.TaskStatus.Failed++
 	default:
 		log.Errorf("Got an unexpected response code ('%s') from engine while submitting result.", status)
+		scanner.TaskStatus.Failed++
 	}
 }
 
 func (scanner ScannerScaffolding) sendFailure(failure JobFailure) {
+	scanner.TaskStatus.Failed++
+
 	errorPayload := ScanError{
 		ScannerId:    scanner.ScannerId,
 		ErrorMessage: failure.ErrorMessage,
@@ -304,11 +313,7 @@ func (scanner ScannerScaffolding) generateScannerStatus() ScannerStatus {
 		StartedAt:   scanner.StartedAt,
 		WorkerId:    scanner.ScannerId,
 		Healthcheck: "",
-		TaskStatus: TaskStatus{
-			Started:   0,
-			Completed: 0,
-			Failed:    0,
-		},
+		TaskStatus:  *scanner.TaskStatus,
 		EngineStatus: EngineStatus{
 			LastSuccessfulConnection: nil,
 		},
@@ -352,6 +357,11 @@ func CreateJobConnection(configuration ScannerConfiguration) ScannerScaffolding 
 		Failures:       failures,
 		InitialTestRun: configuration.TestScannerFunctionality(),
 		StartedAt:      time.Now(),
+		TaskStatus: &TaskStatus{
+			Started:   0,
+			Completed: 0,
+			Failed:    0,
+		},
 	}
 
 	scanner.logConfiguration()
