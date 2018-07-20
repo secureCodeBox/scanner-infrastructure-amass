@@ -12,7 +12,11 @@ RUN go build main.go
 
 FROM alpine
 COPY --from=builder /usr/local/go/src/github.com/j12934/secureCodeBox/main /securecodebox/
+
 RUN chmod +x /securecodebox/main
+RUN addgroup -S amass_group && adduser -S -g amass_group amass_user
+
+USER amass_user
 
 ARG COMMIT_ID=unkown
 ARG REPOSITORY_URL=unkown
