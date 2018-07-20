@@ -164,6 +164,7 @@ func (scanner ScannerScaffolding) fetchJob() *ScanJob {
 	scanner.logSuccessfulEngineConnection()
 
 	body, err := ioutil.ReadAll(res.Body)
+	defer res.Body.Close()
 
 	if err != nil {
 		log.Error("Failed to read response body stream.")
