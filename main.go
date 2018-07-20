@@ -132,9 +132,5 @@ func main() {
 		},
 	)
 
-	block := make(chan bool)
-
-	go workOnJobs(scanner.Jobs, scanner.Results, scanner.Failures)
-
-	<-block
+	workOnJobs(scanner.Jobs, scanner.Results, scanner.Failures)
 }
