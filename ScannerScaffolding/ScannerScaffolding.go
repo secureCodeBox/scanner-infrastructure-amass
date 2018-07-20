@@ -3,7 +3,6 @@ package ScannerScaffolding
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/caffix/amass/amass"
 	"github.com/nu7hatch/gouuid"
 	"github.com/op/go-logging"
 	"io/ioutil"
@@ -79,6 +78,20 @@ type ScannerScaffolding struct {
 	Jobs     chan ScanJob
 	Results  chan JobResult
 	Failures chan JobFailure
+
+	InitialTestRun TestRun
+}
+
+type TestRun struct {
+	Version string `json:"version"`
+	TestRun string `json:"testRun"`
+}
+
+type ScannerConfiguration struct {
+	EngineUrl                string
+	TaskName                 string
+	ScannerType              string
+	TestScannerFunctionality func() TestRun
 }
 
 func env(key, defaultValue string) string {
@@ -249,8 +262,8 @@ func (scanner ScannerScaffolding) logConfiguration() {
 	log.Info()
 	log.Info("Scanner Status:")
 
-	log.Info("Test Run: \t")
-	log.Info("Version: \t", amass.Version)
+	log.Infof("Test Run: %s\t", scanner.InitialTestRun.TestRun)
+	log.Infof("Version: %s\t", scanner.InitialTestRun.Version)
 
 	log.Info()
 	log.Info("Build:")
@@ -259,7 +272,7 @@ func (scanner ScannerScaffolding) logConfiguration() {
 	log.Infof("Branch: \t%s", env("SCB_BRANCH", "unknown"))
 }
 
-func CreateJobConnection(engineUrl, taskName, scannerType string) ScannerScaffolding {
+func CreateJobConnection(configuration ScannerConfiguration) ScannerScaffolding {
 	jobs := make(chan ScanJob)
 	results := make(chan JobResult)
 	failures := make(chan JobFailure)
@@ -268,13 +281,14 @@ func CreateJobConnection(engineUrl, taskName, scannerType string) ScannerScaffol
 	scannerId := u.String()
 
 	scanner := ScannerScaffolding{
-		ScannerId:   scannerId,
-		ScannerType: scannerType,
-		TaskName:    taskName,
-		EngineUrl:   env("ENGINE_ADDRESS", engineUrl),
-		Jobs:        jobs,
-		Results:     results,
-		Failures:    failures,
+		ScannerId:      scannerId,
+		ScannerType:    configuration.ScannerType,
+		TaskName:       configuration.TaskName,
+		EngineUrl:      env("ENGINE_ADDRESS", configuration.EngineUrl),
+		Jobs:           jobs,
+		Results:        results,
+		Failures:       failures,
+		InitialTestRun: configuration.TestScannerFunctionality(),
 	}
 
 	scanner.logConfiguration()

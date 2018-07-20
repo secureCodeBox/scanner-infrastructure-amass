@@ -115,6 +115,13 @@ func workOnJobs(jobs <-chan ScannerScaffolding.ScanJob, results chan<- ScannerSc
 	}
 }
 
+func testScannerFunctionality() ScannerScaffolding.TestRun {
+	return ScannerScaffolding.TestRun{
+		Version: amass.Version,
+		TestRun: "Not feasible",
+	}
+}
+
 func main() {
 	loggingBackend := logging.NewLogBackend(os.Stdout, "", 0)
 	leveledBackend := logging.AddModuleLevel(loggingBackend)
@@ -126,9 +133,12 @@ func main() {
 	logging.SetBackend(leveledBackend)
 
 	scanner := ScannerScaffolding.CreateJobConnection(
-		"http://localhost:8080",
-		"subdomain_scan",
-		"SubdomainScanner",
+		ScannerScaffolding.ScannerConfiguration{
+			EngineUrl:                "http://localhost:8080",
+			TaskName:                 "subdomain_scan",
+			ScannerType:              "SubdomainScanner",
+			TestScannerFunctionality: testScannerFunctionality,
+		},
 	)
 
 	block := make(chan bool)
