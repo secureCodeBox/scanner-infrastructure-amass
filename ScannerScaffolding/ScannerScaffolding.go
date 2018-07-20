@@ -352,8 +352,6 @@ func (scanner ScannerScaffolding) generateScannerStatus() ScannerStatus {
 
 func statusPageHandler(scanner *ScannerScaffolding) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		log.Info("Handling status site request")
-
 		w.Header().Add("Content-Type", "application/json")
 		if scanner.isHealthy() {
 			w.WriteHeader(http.StatusOK)
@@ -371,6 +369,15 @@ func (scanner *ScannerScaffolding) StartStatusServer() {
 }
 
 func CreateJobConnection(configuration ScannerConfiguration) ScannerScaffolding {
+	loggingBackend := logging.NewLogBackend(os.Stdout, "", 0)
+	leveledBackend := logging.AddModuleLevel(loggingBackend)
+	if os.Getenv("DEBUG") != "" {
+		leveledBackend.SetLevel(logging.DEBUG, "")
+	} else {
+		leveledBackend.SetLevel(logging.INFO, "")
+	}
+	logging.SetBackend(leveledBackend)
+
 	jobs := make(chan ScanJob)
 	results := make(chan JobResult)
 	failures := make(chan JobFailure)

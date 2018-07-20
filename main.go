@@ -8,7 +8,6 @@ import (
 	"github.com/secureCodeBox/scanner-infrastructure-amass/ScannerScaffolding"
 	"math/rand"
 	"net"
-	"os"
 	"time"
 )
 
@@ -124,15 +123,6 @@ func testScannerFunctionality() ScannerScaffolding.TestRun {
 }
 
 func main() {
-	loggingBackend := logging.NewLogBackend(os.Stdout, "", 0)
-	leveledBackend := logging.AddModuleLevel(loggingBackend)
-	if os.Getenv("DEBUG") != "" {
-		leveledBackend.SetLevel(logging.DEBUG, "")
-	} else {
-		leveledBackend.SetLevel(logging.INFO, "")
-	}
-	logging.SetBackend(leveledBackend)
-
 	scanner := ScannerScaffolding.CreateJobConnection(
 		ScannerScaffolding.ScannerConfiguration{
 			EngineUrl:                "http://localhost:8080",
