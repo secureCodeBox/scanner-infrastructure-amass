@@ -79,6 +79,7 @@ type ScannerScaffolding struct {
 	Results  chan JobResult
 	Failures chan JobFailure
 
+	StartedAt      time.Time
 	InitialTestRun TestRun
 }
 
@@ -92,6 +93,32 @@ type ScannerConfiguration struct {
 	TaskName                 string
 	ScannerType              string
 	TestScannerFunctionality func() TestRun
+}
+
+type TaskStatus struct {
+	Started   int `json:"started"`
+	Completed int `json:"completed"`
+	Failed    int `json:"failed"`
+}
+
+type EngineStatus struct {
+	LastSuccessfulConnection time.Time `json:"last_successful_connection"`
+}
+
+type BuildConfiguration struct {
+	CommitId      string `json:"commit_id"`
+	RepositoryUrl string `json:"repository_url"`
+	Branch        string `json:"branch"`
+}
+
+type ScannerStatus struct {
+	StartedAt          time.Time          `json:"started_at"`
+	WorkerId           string             `json:"worker_id"`
+	Healthcheck        string             `json:"healthcheck"`
+	TaskStatus         TaskStatus         `json:"status"`
+	EngineStatus       EngineStatus       `json:"engine"`
+	ScannerStatus      TestRun            `json:"scanner"`
+	BuildConfiguration BuildConfiguration `json:"build"`
 }
 
 func env(key, defaultValue string) string {
@@ -272,6 +299,41 @@ func (scanner ScannerScaffolding) logConfiguration() {
 	log.Infof("Branch: \t%s", env("SCB_BRANCH", "unknown"))
 }
 
+func (scanner ScannerScaffolding) generateScannerStatus() ScannerStatus {
+	return ScannerStatus{
+		StartedAt:   scanner.StartedAt,
+		WorkerId:    scanner.ScannerId,
+		Healthcheck: "",
+		TaskStatus: TaskStatus{
+			Started:   0,
+			Completed: 0,
+			Failed:    0,
+		},
+		EngineStatus: EngineStatus{
+			LastSuccessfulConnection: nil,
+		},
+		ScannerStatus: scanner.InitialTestRun,
+		BuildConfiguration: BuildConfiguration{
+			CommitId:      env("SCB_COMMIT_ID", "unknown"),
+			RepositoryUrl: env("SCB_REPOSITORY_URL", "unknown"),
+			Branch:        env("SCB_BRANCH", "unknown"),
+		},
+	}
+}
+
+func statusPageHandler(scanner *ScannerScaffolding) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		log.Info("Handling status site request")
+		w.Header().Add("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(scanner.generateScannerStatus())
+	}
+}
+
+func (scanner *ScannerScaffolding) StartStatusServer() {
+	http.HandleFunc("/status", statusPageHandler(scanner))
+	http.ListenAndServe(":3003", nil)
+}
+
 func CreateJobConnection(configuration ScannerConfiguration) ScannerScaffolding {
 	jobs := make(chan ScanJob)
 	results := make(chan JobResult)
@@ -289,6 +351,7 @@ func CreateJobConnection(configuration ScannerConfiguration) ScannerScaffolding 
 		Results:        results,
 		Failures:       failures,
 		InitialTestRun: configuration.TestScannerFunctionality(),
+		StartedAt:      time.Now(),
 	}
 
 	scanner.logConfiguration()
@@ -297,6 +360,7 @@ func CreateJobConnection(configuration ScannerConfiguration) ScannerScaffolding 
 	go scanner.submitFailures()
 
 	go scanner.pullJobs()
+	go scanner.StartStatusServer()
 
 	return scanner
 }
