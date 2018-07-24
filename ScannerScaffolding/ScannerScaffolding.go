@@ -3,13 +3,14 @@ package ScannerScaffolding
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/nu7hatch/gouuid"
-	"github.com/op/go-logging"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/nu7hatch/gouuid"
+	"github.com/op/go-logging"
 )
 
 type ScanJob struct {
@@ -366,7 +367,7 @@ func statusPageHandler(scanner *ScannerScaffolding) func(w http.ResponseWriter, 
 
 func (scanner *ScannerScaffolding) StartStatusServer() {
 	http.HandleFunc("/status", statusPageHandler(scanner))
-	http.ListenAndServe(":3003", nil)
+	http.ListenAndServe(":8080", nil)
 }
 
 func CreateJobConnection(configuration ScannerConfiguration) ScannerScaffolding {
