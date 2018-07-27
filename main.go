@@ -32,32 +32,10 @@ func workOnJobs(jobs <-chan ScannerScaffolding.ScanJob, results chan<- ScannerSc
 	for job := range jobs {
 		log.Infof("Working on job '%s'", job.JobId)
 
-		output := make(chan *amass.AmassOutput)
+		masterOutput := make(chan *amass.AmassOutput)
 
 		// Seed the default pseudo-random number generator
 		rand.Seed(time.Now().UTC().UnixNano())
-
-		// Setup the most basic amass configuration
-		config := amass.CustomConfig(&amass.AmassConfig{
-			Output: output,
-			NoDNS:  true,
-		})
-
-		for _, target := range job.Targets {
-			log.Infof("Job '%s' is scanning subdomains for '%s'", job.JobId, target.Location)
-			config.AddDomain(target.Location)
-
-			if _, exists := target.Attributes["NO_DNS"]; exists == false {
-				config.NoDNS = false
-			} else {
-				switch noDNS := target.Attributes["NO_DNS"].(type) {
-				case bool:
-					config.NoDNS = noDNS
-				default:
-					failures <- createJobFailure(job.JobId, "Scan Parameter 'NO_DNS' must be boolean", "")
-				}
-			}
-		}
 
 		findings := make([]ScannerScaffolding.Finding, 0)
 
@@ -65,7 +43,7 @@ func workOnJobs(jobs <-chan ScannerScaffolding.ScanJob, results chan<- ScannerSc
 			for {
 				log.Debug("Waiting for new subdomains.")
 				select {
-				case result, more := <-output:
+				case result, more := <-masterOutput:
 					if more == false {
 						return
 					}
@@ -115,8 +93,38 @@ func workOnJobs(jobs <-chan ScannerScaffolding.ScanJob, results chan<- ScannerSc
 			}
 		}()
 
-		// Begin the enumeration process
-		amass.StartEnumeration(config)
+		for _, target := range job.Targets {
+			output := make(chan *amass.AmassOutput)
+
+			go func() {
+				for result := range output {
+					masterOutput <- result
+				}
+			}()
+
+			// Setup the most basic amass configuration
+			config := amass.CustomConfig(&amass.AmassConfig{
+				Output: output,
+				NoDNS:  true,
+			})
+
+			log.Infof("Job '%s' is scanning subdomains for '%s'", job.JobId, target.Location)
+			config.AddDomain(target.Location)
+
+			if _, exists := target.Attributes["NO_DNS"]; exists == false {
+				config.NoDNS = false
+			} else {
+				switch noDNS := target.Attributes["NO_DNS"].(type) {
+				case bool:
+					config.NoDNS = noDNS
+				default:
+					failures <- createJobFailure(job.JobId, "Scan Parameter 'NO_DNS' must be boolean", "")
+				}
+			}
+
+			// Begin the enumeration process
+			amass.StartEnumeration(config)
+		}
 
 		log.Infof("Subdomainscan '%s' found %d subdomains.", job.JobId, len(findings))
 
