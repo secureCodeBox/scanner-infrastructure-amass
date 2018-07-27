@@ -178,6 +178,7 @@ func (scanner ScannerScaffolding) fetchJob() *ScanJob {
 
 	if err != nil {
 		log.Error("Failed to parse json of a new job.")
+		log.Error(err)
 		return nil
 	}
 
@@ -292,7 +293,8 @@ func (scanner ScannerScaffolding) sendFailure(failure JobFailure) {
 
 func (scanner ScannerScaffolding) submitFailures() {
 	for failure := range scanner.Failures {
-		log.Infof("Submitting failure for Job '%s'", failure.JobId)
+		log.Warningf("Submitting failure for Job '%s'", failure.JobId)
+		log.Warning(failure)
 		scanner.sendFailure(failure)
 	}
 }
