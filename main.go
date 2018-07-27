@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/caffix/amass/amass"
+	"github.com/OWASP/Amass/amass"
 	"github.com/nu7hatch/gouuid"
 	"github.com/op/go-logging"
 	"github.com/secureCodeBox/scanner-infrastructure-amass/ScannerScaffolding"
@@ -38,11 +38,25 @@ func workOnJobs(jobs <-chan ScannerScaffolding.ScanJob, results chan<- ScannerSc
 		rand.Seed(time.Now().UTC().UnixNano())
 
 		// Setup the most basic amass configuration
-		config := amass.CustomConfig(&amass.AmassConfig{Output: output})
+		config := amass.CustomConfig(&amass.AmassConfig{
+			Output: output,
+			NoDNS:  true,
+		})
 
 		for _, target := range job.Targets {
 			log.Infof("Job '%s' is scanning subdomains for '%s'", job.JobId, target.Location)
-			config.AddDomains([]string{target.Location})
+			config.AddDomain(target.Location)
+
+			if _, exists := target.Attributes["NO_DNS"]; exists == false {
+				config.NoDNS = false
+			} else {
+				switch noDNS := target.Attributes["NO_DNS"].(type) {
+				case bool:
+					config.NoDNS = noDNS
+				default:
+					failures <- createJobFailure(job.JobId, "Scan Parameter 'NO_DNS' must be boolean", "")
+				}
+			}
 		}
 
 		findings := make([]ScannerScaffolding.Finding, 0)
@@ -116,8 +130,8 @@ func workOnJobs(jobs <-chan ScannerScaffolding.ScanJob, results chan<- ScannerSc
 
 func testScannerFunctionality() ScannerScaffolding.TestRun {
 	return ScannerScaffolding.TestRun{
-		Version:    amass.Version,
-		Details:    "Not feasible",
+		Version:    "", //amass.Version,
+		Details:    amass.Version,
 		Successful: true,
 	}
 }
