@@ -104,33 +104,31 @@ func workOnJobs(jobs <-chan ScannerScaffolding.ScanJob, results chan<- ScannerSc
 				}
 			}()
 
-			// Setup the most basic amass configuration
-			config := amass.CustomConfig(&amass.AmassConfig{
-				Output: output,
-				NoDNS:  true,
-			})
+			enum := amass.NewEnumeration()
+
+			enum.Output = output
 
 			if _, isDebug := os.LookupEnv("DEBUG"); isDebug {
 				logger.Infof("Setting up high verbosity Logger for amass.")
-				config.Log = log.New(os.Stdout, "amass", log.Ldate|log.Ltime|log.Lshortfile)
+				enum.Log = log.New(os.Stdout, "amass", log.Ldate|log.Ltime|log.Lshortfile)
 			}
 
 			logger.Infof("Job '%s' is scanning subdomains for '%s'", job.JobId, target.Location)
-			config.AddDomain(target.Location)
+			enum.AddDomain(target.Location)
 
 			if _, exists := target.Attributes["NO_DNS"]; exists == false {
-				config.NoDNS = false
+				enum.Passive = true
 			} else {
 				switch noDNS := target.Attributes["NO_DNS"].(type) {
 				case bool:
-					config.NoDNS = noDNS
+					enum.Passive = noDNS
 				default:
 					failures <- createJobFailure(job.JobId, "Scan Parameter 'NO_DNS' must be boolean", "")
 				}
 			}
 
 			// Begin the enumeration process
-			amass.StartEnumeration(config)
+			enum.Start()
 		}
 
 		logger.Infof("Subdomainscan '%s' found %d subdomains.", job.JobId, len(findings))
