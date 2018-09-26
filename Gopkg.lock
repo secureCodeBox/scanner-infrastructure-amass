@@ -90,12 +90,12 @@
   revision = "179d4d0c4d8d407a32af483c2354df1d2c91e6c3"
 
 [[projects]]
-  digest = "1:5b3b29ce0e569f62935d9541dff2e16cc09df981ebde48e82259076a73a3d0c7"
+  branch = "master"
+  digest = "1:41f3b549dbb8216e490c27926c09dc055aa509b3476e7cbc3317103990b13aeb"
   name = "github.com/op/go-logging"
   packages = ["."]
   pruneopts = "UT"
-  revision = "b2cb9fa56473e98db8caba80237377e83fe44db5"
-  version = "v1"
+  revision = "970db520ece77730c7e4724c61121037378659d9"
 
 [[projects]]
   branch = "master"
@@ -131,7 +131,7 @@
     "ipv6",
   ]
   pruneopts = "UT"
-  revision = "f04abc6bdfa7a0171a8a0c9fd2ada9391044d056"
+  revision = "4dfa2610cdf3b287375bbba5b8f2a14d3b01d8de"
 
 [[projects]]
   branch = "master"
@@ -147,7 +147,7 @@
   name = "golang.org/x/sys"
   packages = ["unix"]
   pruneopts = "UT"
-  revision = "2f1df4e56cdeb503a08d8577e6f1a7eb12efab82"
+  revision = "c2ed4eda69e7f62900806e4cd6e45f0429f859fa"
 
 [solve-meta]
   analyzer-name = "dep"
