@@ -1,8 +1,13 @@
 FROM golang AS builder
-WORKDIR /usr/local/go/src/github.com/j12934/secureCodeBox/
-COPY . .
 
-RUN go get
+# Download and install the latest release of dep
+ADD https://github.com/golang/dep/releases/download/v0.5.0/dep-linux-amd64 /usr/bin/dep
+RUN chmod +x /usr/bin/dep
+
+WORKDIR /go/src/github.com/secureCodeBox/scanner-infrastructure-amass/
+COPY Gopkg.toml Gopkg.lock ./
+RUN dep ensure --vendor-only
+COPY . .
 
 # Otherwise binaries would link to libaries which dont exist on alpine.
 # See: https://stackoverflow.com/questions/36279253/go-compiled-binary-wont-run-in-an-alpine-docker-container-on-ubuntu-host
@@ -11,9 +16,9 @@ ENV CGO_ENABLED 0
 RUN go build main.go
 
 FROM alpine
-COPY --from=builder /usr/local/go/src/github.com/j12934/secureCodeBox/main /securecodebox/
+COPY --from=builder /go/src/github.com/secureCodeBox/scanner-infrastructure-amass/main /scanner-infrastructure-amass/main
 
-RUN chmod +x /securecodebox/main
+RUN chmod +x scanner-infrastructure-amass/main
 RUN addgroup -S amass_group && adduser -S -g amass_group amass_user
 
 USER amass_user
@@ -21,11 +26,25 @@ USER amass_user
 ARG COMMIT_ID=unkown
 ARG REPOSITORY_URL=unkown
 ARG BRANCH=unkown
+ARG BUILD_DATE
+ARG VERSION
 
 ENV SCB_COMMIT_ID ${COMMIT_ID}
 ENV SCB_REPOSITORY_URL ${REPOSITORY_URL}
 ENV SCB_BRANCH ${BRANCH}
 
+LABEL org.opencontainers.image.title="secureCodeBox scanner-infrastructure-amass" \
+    org.opencontainers.image.description="Amass integration for secureCodeBox" \
+    org.opencontainers.image.authors="iteratec GmbH" \
+    org.opencontainers.image.vendor="iteratec GmbH" \
+    org.opencontainers.image.documentation="https://github.com/secureCodeBox/secureCodeBox" \
+    org.opencontainers.image.licenses="Apache-2.0" \
+    org.opencontainers.image.version=$VERSION \
+    org.opencontainers.image.url=$REPOSITORY_URL \
+    org.opencontainers.image.source=$REPOSITORY_URL \
+    org.opencontainers.image.revision=$COMMIT_ID \
+    org.opencontainers.image.created=$BUILD_DATE
+
 EXPOSE 8080
 
-CMD /securecodebox/main
+CMD scanner-infrastructure-amass/main

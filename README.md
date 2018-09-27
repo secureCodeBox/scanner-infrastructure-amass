@@ -23,9 +23,16 @@ To configure this service specify the following environment variables:
 | ENGINE_BASIC_AUTH_USER     | username      |
 | ENGINE_BASIC_AUTH_PASSWORD | 123456        |
 
+## Local setup
+1. Clone the repo into your $GOPATH
+2. Install the go dependency manager "dep"
+3. Run `dep ensure` inside your repo to load the dependencies
+4. Run `go build main.go` to compile
+5. Execute the compiled `./main` file
+
 ## Build with docker
 
-To build the docker container run: `docker build -t CONTAINER_NAME:LABEL .`
+To build the docker container run: `docker build -t IMAGE_NAME:LABEL .`
 
 [scb-project]: https://github.com/secureCodeBox/secureCodeBox
 [scb-developer-guide]: https://github.com/secureCodeBox/secureCodeBox/blob/develop/docs/developer-guide/README.md
