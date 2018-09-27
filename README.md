@@ -25,7 +25,7 @@ To configure this service specify the following environment variables:
 
 ## Build with docker
 
-To build the docker container run: `docker build -t CONTAINER_NAME:LABEL .`
+To build the docker container run: `docker build -t IMAGE_NAME:LABEL .`
 
 [scb-project]: https://github.com/secureCodeBox/secureCodeBox
 [scb-developer-guide]: https://github.com/secureCodeBox/secureCodeBox/blob/develop/docs/developer-guide/README.md
