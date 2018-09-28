@@ -169,7 +169,7 @@ func (scanner ScannerScaffolding) fetchJob() *ScanJob {
 	}
 }
 
-func doHTTPRequest(method, url string, body io.Reader) (retres *http.Response, reterr error) {
+func doHTTPRequest(method, url string, body io.Reader) (*http.Response, error) {
 	req, err := http.NewRequest(method, url, body)
 	if err != nil {
 		log.Warning("Failed to create http request")
