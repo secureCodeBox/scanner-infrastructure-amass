@@ -24,6 +24,7 @@ To configure this service specify the following environment variables:
 | ENGINE_BASIC_AUTH_PASSWORD | 123456        |
 
 ## Local setup
+
 1. Clone the repo into your $GOPATH
 2. Install the go dependency manager "dep"
 3. Run `dep ensure` inside your repo to load the dependencies
