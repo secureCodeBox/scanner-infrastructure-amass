@@ -3,6 +3,7 @@ package ScannerScaffolding
 import (
 	"bytes"
 	"encoding/json"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -134,23 +135,9 @@ func env(key, defaultValue string) string {
 	return defaultValue
 }
 
-func addEngineUserAsBasicAuthHeader(req *http.Request) {
-	username := env("ENGINE_BASIC_AUTH_USER", "")
-	password := env("ENGINE_BASIC_AUTH_PASSWORD", "")
-
-	if (username != "") && (password != "") {
-		req.SetBasicAuth(username, password)
-	}
-}
-
 func (scanner ScannerScaffolding) fetchJob() *ScanJob {
 	url := scanner.EngineUrl + "/box/jobs/lock/" + scanner.TaskName + "/" + scanner.ScannerId
-	req, err := http.NewRequest("POST",
-		url,
-		bytes.NewBuffer([]byte{}))
-	addEngineUserAsBasicAuthHeader(req)
-	client := &http.Client{}
-	res, err := client.Do(req)
+	res, err := doHTTPRequest("POST", url, bytes.NewBuffer([]byte{}))
 
 	if err != nil {
 		log.Warning("Failed to fetch job from engine.")
@@ -179,6 +166,28 @@ func (scanner ScannerScaffolding) fetchJob() *ScanJob {
 	default:
 		log.Warningf("Unexpected response status code '%s'", status)
 		return nil
+	}
+}
+
+func doHTTPRequest(method, url string, body io.Reader) (retres *http.Response, reterr error) {
+	req, err := http.NewRequest(method, url, body)
+	if err != nil {
+		log.Warning("Failed to create http request")
+		log.Warning(err)
+		return nil, err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	addEngineUserAsBasicAuthHeader(req)
+	client := &http.Client{}
+	return client.Do(req)
+}
+
+func addEngineUserAsBasicAuthHeader(req *http.Request) {
+	username := env("ENGINE_BASIC_AUTH_USER", "")
+	password := env("ENGINE_BASIC_AUTH_PASSWORD", "")
+
+	if (username != "") && (password != "") {
+		req.SetBasicAuth(username, password)
 	}
 }
 
@@ -245,12 +254,7 @@ func (scanner ScannerScaffolding) sendResults(jobId string, result Result) {
 	}
 
 	url := scanner.EngineUrl + "/box/jobs/" + jobId + "/result"
-	req, err := http.NewRequest("POST",
-		url,
-		bytes.NewBuffer(jsonBytes))
-	addEngineUserAsBasicAuthHeader(req)
-	client := &http.Client{}
-	res, err := client.Do(req)
+	res, err := doHTTPRequest("POST", url, bytes.NewBuffer(jsonBytes))
 
 	if err != nil {
 		log.Errorf("Failed to send request for result of job '%s'", jobId)
@@ -266,6 +270,8 @@ func (scanner ScannerScaffolding) sendResults(jobId string, result Result) {
 	case "400":
 		log.Warningf("Invalid Response / Request from engine while submitting result for job '%s'", jobId)
 		scanner.TaskStatus.Failed++
+	case "401":
+		log.Warning("User not authorized. Did you set the environment variables to authenticate to the engine?")
 	case "500":
 		log.Warningf("Encountered 500 Response Code from Engine while submitting result for job '%s'", jobId)
 		scanner.TaskStatus.Failed++
@@ -291,12 +297,7 @@ func (scanner ScannerScaffolding) sendFailure(failure JobFailure) {
 	}
 
 	url := scanner.EngineUrl + "/box/jobs/" + failure.JobId + "/failure"
-	req, err := http.NewRequest("POST",
-		url,
-		bytes.NewBuffer(jsonBytes))
-	addEngineUserAsBasicAuthHeader(req)
-	client := &http.Client{}
-	res, err := client.Do(req)
+	res, err := doHTTPRequest("POST", url, bytes.NewBuffer(jsonBytes))
 
 	if err != nil {
 		log.Errorf("Failed to send request for failure of job '%s'", failure.JobId)
@@ -310,6 +311,8 @@ func (scanner ScannerScaffolding) sendFailure(failure JobFailure) {
 		scanner.logSuccessfulEngineConnection()
 	case "400":
 		log.Warningf("Invalid Response / Request from engine while submitting failure report for job '%s'", failure.JobId)
+	case "401":
+		log.Warning("User not authorized. Did you set the environment variables to authenticate to the engine?")
 	case "500":
 		log.Warningf("Encountered 500 Response Code from Engine while submitting failure report for job '%s'", failure.JobId)
 	default:
