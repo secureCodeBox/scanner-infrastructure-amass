@@ -2,16 +2,18 @@ package main
 
 import (
 	"fmt"
-	"github.com/caffix/amass/amass"
+	"github.com/OWASP/Amass/amass"
 	"github.com/nu7hatch/gouuid"
 	"github.com/op/go-logging"
 	"github.com/secureCodeBox/scanner-infrastructure-amass/ScannerScaffolding"
+	"log"
 	"math/rand"
 	"net"
+	"os"
 	"time"
 )
 
-var log = logging.MustGetLogger("SubdomainScanner")
+var logger = logging.MustGetLogger("SubdomainScanner")
 
 type Address struct {
 	Address     net.IP     `json:"ADDRESS"`
@@ -30,36 +32,28 @@ func createJobFailure(jobId, message, details string) ScannerScaffolding.JobFail
 
 func workOnJobs(jobs <-chan ScannerScaffolding.ScanJob, results chan<- ScannerScaffolding.JobResult, failures chan<- ScannerScaffolding.JobFailure) {
 	for job := range jobs {
-		log.Infof("Working on job '%s'", job.JobId)
+		logger.Infof("Working on job '%s'", job.JobId)
 
-		output := make(chan *amass.AmassOutput)
+		masterOutput := make(chan *amass.AmassOutput)
 
 		// Seed the default pseudo-random number generator
 		rand.Seed(time.Now().UTC().UnixNano())
-
-		// Setup the most basic amass configuration
-		config := amass.CustomConfig(&amass.AmassConfig{Output: output})
-
-		for _, target := range job.Targets {
-			log.Infof("Job '%s' is scanning subdomains for '%s'", job.JobId, target.Location)
-			config.AddDomains([]string{target.Location})
-		}
 
 		findings := make([]ScannerScaffolding.Finding, 0)
 
 		go func() {
 			for {
-				log.Debug("Waiting for new subdomains.")
+				logger.Debug("Waiting for new subdomains.")
 				select {
-				case result, more := <-output:
+				case result, more := <-masterOutput:
 					if more == false {
 						return
 					}
 
-					log.Debugf("Found new subdomain '%s'", result.Name)
+					logger.Debugf("Found new subdomain '%s'", result.Name)
 					u, err := uuid.NewV4()
 					if err != nil {
-						log.Errorf("Could not create UUID for subdomain finding '%s'.", result.Domain)
+						logger.Errorf("Could not create UUID for subdomain finding '%s'.", result.Domain)
 						failures <- createJobFailure(job.JobId, "Could not create UUID for finding", "")
 						return
 					}
@@ -94,17 +88,50 @@ func workOnJobs(jobs <-chan ScannerScaffolding.ScanJob, results chan<- ScannerSc
 					}
 					findings = append(findings, finding)
 				case <-time.After(2 * time.Hour):
-					log.Warningf("Scan for Job '%s' timed out!", job.JobId)
+					logger.Warningf("Scan for Job '%s' timed out!", job.JobId)
 					failures <- createJobFailure(job.JobId, "Subdomain Scan Timed out", "Subdomainscans are limited to a two hour timeframe")
 					return
 				}
 			}
 		}()
 
-		// Begin the enumeration process
-		amass.StartEnumeration(config)
+		for _, target := range job.Targets {
+			output := make(chan *amass.AmassOutput)
 
-		log.Infof("Subdomainscan '%s' found %d subdomains.", job.JobId, len(findings))
+			go func() {
+				for result := range output {
+					masterOutput <- result
+				}
+			}()
+
+			enum := amass.NewEnumeration()
+
+			enum.Output = output
+
+			if _, isDebug := os.LookupEnv("DEBUG"); isDebug {
+				logger.Infof("Setting up high verbosity Logger for amass.")
+				enum.Log = log.New(os.Stdout, "amass", log.Ldate|log.Ltime|log.Lshortfile)
+			}
+
+			logger.Infof("Job '%s' is scanning subdomains for '%s'", job.JobId, target.Location)
+			enum.AddDomain(target.Location)
+
+			if _, exists := target.Attributes["NO_DNS"]; exists == false {
+				enum.Passive = true
+			} else {
+				switch noDNS := target.Attributes["NO_DNS"].(type) {
+				case bool:
+					enum.Passive = noDNS
+				default:
+					failures <- createJobFailure(job.JobId, "Scan Parameter 'NO_DNS' must be boolean", "")
+				}
+			}
+
+			// Begin the enumeration process
+			enum.Start()
+		}
+
+		logger.Infof("Subdomainscan '%s' found %d subdomains.", job.JobId, len(findings))
 
 		results <- ScannerScaffolding.JobResult{
 			JobId:       job.JobId,
