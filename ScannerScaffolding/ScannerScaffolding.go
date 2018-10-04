@@ -258,6 +258,8 @@ func (scanner ScannerScaffolding) sendResults(jobId string, result Result) {
 
 	if err != nil {
 		log.Errorf("Failed to send request for result of job '%s'", jobId)
+		scanner.TaskStatus.Failed++
+		return
 	}
 
 	status := strings.Trim(res.Status, " ")
@@ -272,6 +274,7 @@ func (scanner ScannerScaffolding) sendResults(jobId string, result Result) {
 		scanner.TaskStatus.Failed++
 	case "401":
 		log.Warning("User not authorized. Did you set the environment variables to authenticate to the engine?")
+		scanner.TaskStatus.Failed++
 	case "500":
 		log.Warningf("Encountered 500 Response Code from Engine while submitting result for job '%s'", jobId)
 		scanner.TaskStatus.Failed++
