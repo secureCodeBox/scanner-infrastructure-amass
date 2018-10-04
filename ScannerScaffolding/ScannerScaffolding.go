@@ -145,11 +145,34 @@ func (scanner ScannerScaffolding) fetchJob() *ScanJob {
 		return nil
 	}
 
+	defer res.Body.Close()
+
 	status := strings.Trim(res.Status, " ")
 
 	switch status {
 	case "200":
-		return scanner.parseFetchJobResponse(res)
+		scanner.logSuccessfulEngineConnection()
+
+		body, err := ioutil.ReadAll(res.Body)
+
+		if err != nil {
+			log.Error("Failed to read response body stream.")
+			return nil
+		}
+
+		scanJob := ScanJob{}
+
+		err = json.Unmarshal(body, &scanJob)
+
+		if err != nil {
+			log.Error("Failed to parse json of a new job.")
+			log.Error(err)
+			return nil
+		}
+
+		scanner.TaskStatus.Started = scanner.TaskStatus.Started + 1
+
+		return &scanJob
 	case "204":
 		log.Debug("No jobs available. Going to sleep.")
 		scanner.logSuccessfulEngineConnection()
@@ -189,32 +212,6 @@ func addEngineUserAsBasicAuthHeader(req *http.Request) {
 	if (username != "") && (password != "") {
 		req.SetBasicAuth(username, password)
 	}
-}
-
-func (scanner ScannerScaffolding) parseFetchJobResponse(res *http.Response) *ScanJob {
-	scanner.logSuccessfulEngineConnection()
-
-	body, err := ioutil.ReadAll(res.Body)
-	defer res.Body.Close()
-
-	if err != nil {
-		log.Error("Failed to read response body stream.")
-		return nil
-	}
-
-	scanJob := ScanJob{}
-
-	err = json.Unmarshal(body, &scanJob)
-
-	if err != nil {
-		log.Error("Failed to parse json of a new job.")
-		log.Error(err)
-		return nil
-	}
-
-	scanner.TaskStatus.Started = scanner.TaskStatus.Started + 1
-
-	return &scanJob
 }
 
 func (scanner ScannerScaffolding) pullJobs() {
@@ -258,7 +255,11 @@ func (scanner ScannerScaffolding) sendResults(jobId string, result Result) {
 
 	if err != nil {
 		log.Errorf("Failed to send request for result of job '%s'", jobId)
+		scanner.TaskStatus.Failed++
+		return
 	}
+
+	defer res.Body.Close()
 
 	status := strings.Trim(res.Status, " ")
 
@@ -272,6 +273,7 @@ func (scanner ScannerScaffolding) sendResults(jobId string, result Result) {
 		scanner.TaskStatus.Failed++
 	case "401":
 		log.Warning("User not authorized. Did you set the environment variables to authenticate to the engine?")
+		scanner.TaskStatus.Failed++
 	case "500":
 		log.Warningf("Encountered 500 Response Code from Engine while submitting result for job '%s'", jobId)
 		scanner.TaskStatus.Failed++
@@ -301,7 +303,9 @@ func (scanner ScannerScaffolding) sendFailure(failure JobFailure) {
 
 	if err != nil {
 		log.Errorf("Failed to send request for failure of job '%s'", failure.JobId)
+		return
 	}
+	defer res.Body.Close()
 
 	status := strings.Trim(res.Status, " ")
 

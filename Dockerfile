@@ -16,6 +16,12 @@ ENV CGO_ENABLED 0
 RUN go build main.go
 
 FROM alpine
+
+RUN apk --update upgrade && \
+    apk add curl ca-certificates && \
+    update-ca-certificates && \
+    rm -rf /var/cache/apk/*
+
 COPY --from=builder /go/src/github.com/secureCodeBox/scanner-infrastructure-amass/main /scanner-infrastructure-amass/main
 
 RUN chmod +x scanner-infrastructure-amass/main
