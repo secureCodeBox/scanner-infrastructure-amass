@@ -80,7 +80,7 @@ func workOnJobs(jobs <-chan ScannerScaffolding.ScanJob, results chan<- ScannerSc
 						Id:          u.String(),
 						Name:        result.Name,
 						Description: fmt.Sprintf("Found subdomain %s", result.Name),
-						Location:    fmt.Sprintf("tcp://%s", result.Name),
+						Location:    result.Name,
 						Category:    "Subdomain",
 						Severity:    "INFORMATIONAL",
 						OsiLayer:    "NETWORK",
