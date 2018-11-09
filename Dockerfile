@@ -22,9 +22,7 @@ RUN apk --update upgrade && \
     update-ca-certificates && \
     rm -rf /var/cache/apk/*
 
-# healthchecks: requires curl if not present in container
-# RUN apk --update --no-cache add curl
-HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 CMD curl --fail http://localhost:8080/status || exit 1
+HEALTHCHECK --interval=5s --timeout=5s --start-period=30s --retries=3 CMD curl --fail http://localhost:8080/status || exit 1
 
 COPY --from=builder /go/src/github.com/secureCodeBox/scanner-infrastructure-amass/main /scanner-infrastructure-amass/main
 
