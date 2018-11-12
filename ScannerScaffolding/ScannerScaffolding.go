@@ -368,7 +368,7 @@ func (scanner ScannerScaffolding) healthyStatus() string {
 }
 
 func (scanner ScannerScaffolding) isHealthy() bool {
-	return scanner.EngineStatus.HadSuccessfulEngineConnection && scanner.InitialTestRun.Successful
+	return scanner.InitialTestRun.Successful
 }
 
 func (scanner ScannerScaffolding) generateScannerStatus() ScannerStatus {
