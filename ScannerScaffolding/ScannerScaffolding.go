@@ -175,16 +175,16 @@ func (scanner ScannerScaffolding) fetchJob() *ScanJob {
 		scanner.logSuccessfulEngineConnection()
 		return nil
 	case 400:
-		log.Warning("Invalid Response / Request to engine while fetching a new job.")
+		log.Warning("Invalid response/request to engine while fetching a new job.")
 		return nil
 	case 401:
 		log.Warning("User not authorized. Did you set the environment variables to authenticate to the engine?")
 		return nil
 	case 500:
-		log.Warning("Encountered 500 Response Code from Engine while fetching a new job.")
+		log.Warning("Encountered 500 response code from engine while fetching a new job.")
 		return nil
 	default:
-		log.Warningf("Unexpected response status code '%s'", res.StatusCode)
+		log.Warningf("Unexpected response status code '%d'", res.StatusCode)
 		return nil
 	}
 }
@@ -264,16 +264,16 @@ func (scanner ScannerScaffolding) sendResults(jobId string, result Result) {
 		scanner.TaskStatus.Completed++
 		scanner.logSuccessfulEngineConnection()
 	case 400:
-		log.Warningf("Invalid Response / Request from engine while submitting result for job '%s'", jobId)
+		log.Warningf("Invalid response/request from engine while submitting result for job '%s'", jobId)
 		scanner.TaskStatus.Failed++
 	case 401:
 		log.Warning("User not authorized. Did you set the environment variables to authenticate to the engine?")
 		scanner.TaskStatus.Failed++
 	case 500:
-		log.Warningf("Encountered 500 Response Code from Engine while submitting result for job '%s'", jobId)
+		log.Warningf("Encountered 500 response code from engine while submitting result for job '%s'", jobId)
 		scanner.TaskStatus.Failed++
 	default:
-		log.Errorf("Got an unexpected response code ('%s') from engine while submitting result.", res.StatusCode)
+		log.Errorf("Got an unexpected response code ('%d') from engine while submitting result.", res.StatusCode)
 		scanner.TaskStatus.Failed++
 	}
 }
@@ -307,19 +307,19 @@ func (scanner ScannerScaffolding) sendFailure(failure JobFailure) {
 		log.Infof("Successfully submitted failure report of job '%s'", failure.JobId)
 		scanner.logSuccessfulEngineConnection()
 	case 400:
-		log.Warningf("Invalid Response / Request from engine while submitting failure report for job '%s'", failure.JobId)
+		log.Warningf("Invalid response/request from engine while submitting failure report for job '%s'", failure.JobId)
 	case 401:
 		log.Warning("User not authorized. Did you set the environment variables to authenticate to the engine?")
 	case 500:
-		log.Warningf("Encountered 500 Response Code from Engine while submitting failure report for job '%s'", failure.JobId)
+		log.Warningf("Encountered 500 response code from Engine while submitting failure report for job '%s'", failure.JobId)
 	default:
-		log.Errorf("Got an unexpected response code ('%s') from engine while submitting failure report.", res.StatusCode)
+		log.Errorf("Got an unexpected response code ('%d') from engine while submitting failure report.", res.StatusCode)
 	}
 }
 
 func (scanner ScannerScaffolding) submitFailures() {
 	for failure := range scanner.Failures {
-		log.Warningf("Submitting failure for Job '%s'", failure.JobId)
+		log.Warningf("Submitting failure for job '%s'", failure.JobId)
 		log.Warning(failure)
 		scanner.sendFailure(failure)
 	}
@@ -336,8 +336,8 @@ func (scanner ScannerScaffolding) logConfiguration() {
 	log.Info()
 	log.Info("Scanner Status:")
 
-	log.Infof("Test Run Successful: %v\t", scanner.InitialTestRun.Successful)
-	log.Infof("Test Run Details: %s\t", scanner.InitialTestRun.Details)
+	log.Infof("Test run successful: %v\t", scanner.InitialTestRun.Successful)
+	log.Infof("Test run details: %s\t", scanner.InitialTestRun.Details)
 	log.Infof("Version: %s\t", scanner.InitialTestRun.Version)
 
 	log.Info()
