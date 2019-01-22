@@ -2,20 +2,17 @@
 
 
 [[projects]]
-  digest = "1:a3e63acad4edd80e408c736f59026bb17fcbcbb26daaaf3e185a4c8f03368816"
+  digest = "1:0fe81bee737b4de09ac97b200cf86efc9c3e6fcb31c7f08d8a8d3f46f27af90e"
   name = "github.com/OWASP/Amass"
   packages = [
     "amass",
-    "amass/core",
-    "amass/dnssrv",
     "amass/handlers",
-    "amass/sources",
     "amass/utils",
     "amass/utils/viz",
   ]
   pruneopts = "UT"
-  revision = "cb9f6f66de9c116057e5516863ee7f3a16e917b5"
-  version = "2.7.0"
+  revision = "4f8421955419a95662ce6d0b448b04c4b3c1b809"
+  version = "2.9.0"
 
 [[projects]]
   digest = "1:064cb6ad3c31493d6c1485cf6d7d159665a1acbc9921722981a94125dd9e6ee9"
@@ -43,11 +40,59 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:e2a1ff1174d564ed4b75a62757f4a9081ed3b8c99ed17e47eb252b048b4ff018"
-  name = "github.com/asaskevich/EventBus"
+  digest = "1:843054093d988cb67d7b5e74fdd9626baa385405db165e443ba75a9841fde2a8"
+  name = "github.com/caffix/cloudflare-roundtripper"
+  packages = ["cfrt"]
+  pruneopts = "UT"
+  revision = "4c29d231c9cb6ed0381bd10db5502610a2f59df9"
+
+[[projects]]
+  digest = "1:166438587ed45ac211dab8a3ecebf4fa0c186d0db63430fb9127bbc2e5fcdc67"
+  name = "github.com/cenkalti/backoff"
   packages = ["."]
   pruneopts = "UT"
-  revision = "d46933a94f05c6657d7b923fcf5ac563ee37ec79"
+  revision = "1e4cf3da559842a91afcb6ea6141451e6c30c618"
+  version = "v2.1.1"
+
+[[projects]]
+  branch = "master"
+  digest = "1:dbafc2ff5b1aaf1a66cda9fe7801c0c87535e513700ef62de968d22a99defa12"
+  name = "github.com/dghubble/go-twitter"
+  packages = ["twitter"]
+  pruneopts = "UT"
+  revision = "7fd79e2bcc65f2e35ee1ada816481ab3e0c64d2a"
+
+[[projects]]
+  digest = "1:fba61d8584058169c5bd4625196f33077ba937f7131625d4440686c5e4cff380"
+  name = "github.com/dghubble/sling"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "e2624bf29a7de45ab0802b09aea94ca0a7815c5f"
+  version = "v1.2.0"
+
+[[projects]]
+  digest = "1:8b4bb15de2e698d359eeec15c42453567c98972a70c8619946050360ec02ec32"
+  name = "github.com/go-ini/ini"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "6ed8d5f64cd79a498d1f3fab5880cc376ce41bbe"
+  version = "v1.41.0"
+
+[[projects]]
+  digest = "1:97df918963298c287643883209a2c3f642e6593379f97ab400c2a2e219ab647d"
+  name = "github.com/golang/protobuf"
+  packages = ["proto"]
+  pruneopts = "UT"
+  revision = "aa810b61a9c79d51363740d207bb46cf8e620ed5"
+  version = "v1.2.0"
+
+[[projects]]
+  digest = "1:a63cff6b5d8b95638bfe300385d93b2a6d9d687734b863da8e09dc834510a690"
+  name = "github.com/google/go-querystring"
+  packages = ["query"]
+  pruneopts = "UT"
+  revision = "44c6ddd0a2342c386950e880b658017258da92fc"
+  version = "v1.0.0"
 
 [[projects]]
   digest = "1:a84e4a3d6264596bf3393dc4f434d314dbf8cd722e3452dfc3f0ba66dfa7f0a5"
@@ -99,6 +144,22 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:dbfe572cc258e5bcf54cb650a06d90edd0da04e42ca1ed909cc1d49f00011c63"
+  name = "github.com/robertkrimen/otto"
+  packages = [
+    ".",
+    "ast",
+    "dbg",
+    "file",
+    "parser",
+    "registry",
+    "token",
+  ]
+  pruneopts = "UT"
+  revision = "15f95af6e78dcd2030d8195a138bd88d4f403546"
+
+[[projects]]
+  branch = "master"
   digest = "1:11cdcddc4e9072d0698be2a2b58b183654e1399d9c475987427ed0cb4f6f0039"
   name = "github.com/temoto/robotstxt-go"
   packages = ["."]
@@ -118,11 +179,12 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:514168b031c7f09d17f192a44fc50db082a7f953d240515d1f8895682b60eb0c"
+  digest = "1:54a368040a11e3e2a6467ee81c4d196996d51f91a46cd194b1840bc7f0b9bdb4"
   name = "golang.org/x/net"
   packages = [
     "bpf",
     "context",
+    "context/ctxhttp",
     "html",
     "html/atom",
     "internal/iana",
@@ -135,11 +197,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:e0140c0c868c6e0f01c0380865194592c011fe521d6e12d78bfd33e756fe018a"
-  name = "golang.org/x/sync"
-  packages = ["semaphore"]
+  digest = "1:e007b54f54cbd4214aa6d97a67d57bc2539991adb4e22ea92c482bbece8de469"
+  name = "golang.org/x/oauth2"
+  packages = [
+    ".",
+    "internal",
+  ]
   pruneopts = "UT"
-  revision = "1d60e4601c6fd243af51cc01ddf169918a5407ca"
+  revision = "5dab4167f31cbd76b407f1486c86b40748bc5073"
 
 [[projects]]
   branch = "master"
@@ -148,6 +213,33 @@
   packages = ["unix"]
   pruneopts = "UT"
   revision = "c2ed4eda69e7f62900806e4cd6e45f0429f859fa"
+
+[[projects]]
+  digest = "1:6f3bd49ddf2e104e52062774d797714371fac1b8bddfd8e124ce78e6b2264a10"
+  name = "google.golang.org/appengine"
+  packages = [
+    "internal",
+    "internal/base",
+    "internal/datastore",
+    "internal/log",
+    "internal/remote_api",
+    "internal/urlfetch",
+    "urlfetch",
+  ]
+  pruneopts = "UT"
+  revision = "e9657d882bb81064595ca3b56cbe2546bbabf7b1"
+  version = "v1.4.0"
+
+[[projects]]
+  digest = "1:9935525a8c49b8434a0b0a54e1980e94a6fae73aaff45c5d33ba8dff69de123e"
+  name = "gopkg.in/sourcemap.v1"
+  packages = [
+    ".",
+    "base64vlq",
+  ]
+  pruneopts = "UT"
+  revision = "6e83acea0053641eff084973fee085f0c193c61a"
+  version = "v1.0.5"
 
 [solve-meta]
   analyzer-name = "dep"
