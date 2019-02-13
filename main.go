@@ -2,15 +2,16 @@ package main
 
 import (
 	"fmt"
-	"github.com/OWASP/Amass/amass"
-	"github.com/nu7hatch/gouuid"
-	"github.com/op/go-logging"
-	"github.com/secureCodeBox/scanner-infrastructure-amass/ScannerScaffolding"
 	"log"
 	"math/rand"
 	"net"
 	"os"
 	"time"
+
+	"github.com/OWASP/Amass/amass"
+	"github.com/nu7hatch/gouuid"
+	"github.com/op/go-logging"
+	"github.com/secureCodeBox/scanner-infrastructure-amass/ScannerScaffolding"
 )
 
 var logger = logging.MustGetLogger("SubdomainScanner")
@@ -34,7 +35,7 @@ func workOnJobs(jobs <-chan ScannerScaffolding.ScanJob, results chan<- ScannerSc
 	for job := range jobs {
 		logger.Infof("Working on job '%s'", job.JobId)
 
-		masterOutput := make(chan *amass.AmassOutput)
+		masterOutput := make(chan *amass.Output)
 
 		// Seed the default pseudo-random number generator
 		rand.Seed(time.Now().UTC().UnixNano())
@@ -71,7 +72,7 @@ func workOnJobs(jobs <-chan ScannerScaffolding.ScanJob, results chan<- ScannerSc
 					attributes := make(map[string]interface{})
 
 					attributes["Tag"] = result.Tag
-					attributes["Type"] = result.Type
+					attributes["NAME"] = result.Name
 					attributes["SOURCE"] = result.Source
 					attributes["DOMAIN"] = result.Domain
 					attributes["ADDRESSES"] = addresses
@@ -80,7 +81,7 @@ func workOnJobs(jobs <-chan ScannerScaffolding.ScanJob, results chan<- ScannerSc
 						Id:          u.String(),
 						Name:        result.Name,
 						Description: fmt.Sprintf("Found subdomain %s", result.Name),
-						Location:    fmt.Sprintf("tcp://%s", result.Name),
+						Location:    result.Name,
 						Category:    "Subdomain",
 						Severity:    "INFORMATIONAL",
 						OsiLayer:    "NETWORK",
@@ -96,7 +97,7 @@ func workOnJobs(jobs <-chan ScannerScaffolding.ScanJob, results chan<- ScannerSc
 		}()
 
 		for _, target := range job.Targets {
-			output := make(chan *amass.AmassOutput)
+			output := make(chan *amass.Output)
 
 			go func() {
 				for result := range output {
@@ -114,18 +115,22 @@ func workOnJobs(jobs <-chan ScannerScaffolding.ScanJob, results chan<- ScannerSc
 			}
 
 			logger.Infof("Job '%s' is scanning subdomains for '%s'", job.JobId, target.Location)
-			enum.AddDomain(target.Location)
+
+			config := &amass.Config{}
+			config.AddDomain(target.Location)
 
 			if _, exists := target.Attributes["NO_DNS"]; exists == false {
-				enum.Passive = true
+				config.Passive = true
 			} else {
 				switch noDNS := target.Attributes["NO_DNS"].(type) {
 				case bool:
-					enum.Passive = noDNS
+					config.Passive = noDNS
 				default:
 					failures <- createJobFailure(job.JobId, "Scan Parameter 'NO_DNS' must be boolean", "")
 				}
 			}
+
+			enum.Config = config
 
 			// Begin the enumeration process
 			enum.Start()
