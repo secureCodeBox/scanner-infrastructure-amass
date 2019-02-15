@@ -2,17 +2,19 @@
 
 
 [[projects]]
-  digest = "1:0fe81bee737b4de09ac97b200cf86efc9c3e6fcb31c7f08d8a8d3f46f27af90e"
+  digest = "1:abaed93fc68593b871398fddb547b63b141f1be1d02f124463756d2a8e60a3c3"
   name = "github.com/OWASP/Amass"
   packages = [
     "amass",
+    "amass/core",
     "amass/handlers",
+    "amass/sources",
     "amass/utils",
     "amass/utils/viz",
   ]
   pruneopts = "UT"
-  revision = "4f8421955419a95662ce6d0b448b04c4b3c1b809"
-  version = "2.9.0"
+  revision = "18d4be1c2df5a3c9be0d7434c6a60b46871dc493"
+  version = "2.9.1"
 
 [[projects]]
   digest = "1:064cb6ad3c31493d6c1485cf6d7d159665a1acbc9921722981a94125dd9e6ee9"
@@ -95,6 +97,22 @@
   version = "v1.0.0"
 
 [[projects]]
+  digest = "1:236d7e1bdb50d8f68559af37dbcf9d142d56b431c9b2176d41e2a009b664cda8"
+  name = "github.com/google/uuid"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "9b3b1e0f5f99ae461456d768e7d301a7acdaa2d8"
+  version = "v1.1.0"
+
+[[projects]]
+  digest = "1:7b5c6e2eeaa9ae5907c391a91c132abfd5c9e8a784a341b5625e750c67e6825d"
+  name = "github.com/gorilla/websocket"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "66b9c49e59c6c48f0ffce28c2d8b8a5678502c6d"
+  version = "v1.4.0"
+
+[[projects]]
   digest = "1:a84e4a3d6264596bf3393dc4f434d314dbf8cd722e3452dfc3f0ba66dfa7f0a5"
   name = "github.com/irfansharif/cfilter"
   packages = ["."]
@@ -144,6 +162,14 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:77432084a3fb21be92ca28cdecf9a1e25cee113697a8a7d3c8640b3e2d823d8c"
+  name = "github.com/qasaur/gremgo"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "fa23ada7c5da27801a4c57e83ca1df451139a2f0"
+
+[[projects]]
+  branch = "master"
   digest = "1:dbfe572cc258e5bcf54cb650a06d90edd0da04e42ca1ed909cc1d49f00011c63"
   name = "github.com/robertkrimen/otto"
   packages = [
@@ -157,6 +183,14 @@
   ]
   pruneopts = "UT"
   revision = "15f95af6e78dcd2030d8195a138bd88d4f403546"
+
+[[projects]]
+  digest = "1:274f67cb6fed9588ea2521ecdac05a6d62a8c51c074c1fccc6a49a40ba80e925"
+  name = "github.com/satori/go.uuid"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "f58768cc1a7a7e77a3bd49e98cdd21419399b6a3"
+  version = "v1.2.0"
 
 [[projects]]
   branch = "master"
