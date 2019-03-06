@@ -395,7 +395,7 @@ func statusPageHandler(scanner *ScannerScaffolding) func(w http.ResponseWriter, 
 
 func (scanner *ScannerScaffolding) StartStatusServer() {
 	http.HandleFunc("/status", statusPageHandler(scanner))
-	http.ListenAndServe(":8081", nil)
+	http.ListenAndServe(":8080", nil)
 }
 
 func CreateJobConnection(configuration ScannerConfiguration) ScannerScaffolding {
