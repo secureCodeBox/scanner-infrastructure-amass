@@ -13,7 +13,7 @@
 
 [[constraint]]
   name = "github.com/OWASP/Amass"
-  version = "=2.9.1"
+  version = "=2.9.3"
 
 [[constraint]]
   name = "github.com/nu7hatch/gouuid"

@@ -9,7 +9,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/nu7hatch/gouuid"
+	uuid "github.com/nu7hatch/gouuid"
 	"github.com/op/go-logging"
 )
 

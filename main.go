@@ -10,7 +10,7 @@ import (
 
 	"github.com/OWASP/Amass/amass"
 	"github.com/OWASP/Amass/amass/core"
-	"github.com/nu7hatch/gouuid"
+	uuid "github.com/nu7hatch/gouuid"
 	"github.com/op/go-logging"
 	"github.com/secureCodeBox/scanner-infrastructure-amass/ScannerScaffolding"
 )
