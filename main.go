@@ -9,7 +9,8 @@ import (
 	"time"
 
 	"github.com/OWASP/Amass/amass"
-	"github.com/nu7hatch/gouuid"
+	"github.com/OWASP/Amass/amass/core"
+	uuid "github.com/nu7hatch/gouuid"
 	"github.com/op/go-logging"
 	"github.com/secureCodeBox/scanner-infrastructure-amass/ScannerScaffolding"
 )
@@ -34,8 +35,7 @@ func createJobFailure(jobId, message, details string) ScannerScaffolding.JobFail
 func workOnJobs(jobs <-chan ScannerScaffolding.ScanJob, results chan<- ScannerScaffolding.JobResult, failures chan<- ScannerScaffolding.JobFailure) {
 	for job := range jobs {
 		logger.Infof("Working on job '%s'", job.JobId)
-
-		masterOutput := make(chan *amass.Output)
+		masterOutput := make(chan *core.Output)
 
 		// Seed the default pseudo-random number generator
 		rand.Seed(time.Now().UTC().UnixNano())
@@ -97,43 +97,37 @@ func workOnJobs(jobs <-chan ScannerScaffolding.ScanJob, results chan<- ScannerSc
 		}()
 
 		for _, target := range job.Targets {
-			output := make(chan *amass.Output)
+			enum := amass.NewEnumeration()
 
 			go func() {
-				for result := range output {
+				for result := range enum.Output {
 					masterOutput <- result
 				}
 			}()
 
-			enum := amass.NewEnumeration()
-
-			enum.Output = output
-
 			if _, isDebug := os.LookupEnv("DEBUG"); isDebug {
 				logger.Infof("Setting up high verbosity Logger for amass.")
-				enum.Log = log.New(os.Stdout, "amass", log.Ldate|log.Ltime|log.Lshortfile)
+				enum.Config.Log = log.New(os.Stdout, "amass", log.Ldate|log.Ltime|log.Lshortfile)
 			}
 
 			logger.Infof("Job '%s' is scanning subdomains for '%s'", job.JobId, target.Location)
 
-			config := &amass.Config{}
-			config.AddDomain(target.Location)
+			enum.Config.AddDomain(target.Location)
 
 			if _, exists := target.Attributes["NO_DNS"]; exists == false {
-				config.Passive = true
+				enum.Config.Passive = true
 			} else {
 				switch noDNS := target.Attributes["NO_DNS"].(type) {
 				case bool:
-					config.Passive = noDNS
+					enum.Config.Passive = noDNS
 				default:
 					failures <- createJobFailure(job.JobId, "Scan Parameter 'NO_DNS' must be boolean", "")
 				}
 			}
 
-			enum.Config = config
-
 			// Begin the enumeration process
 			enum.Start()
+			<-enum.Done
 		}
 
 		logger.Infof("Subdomainscan '%s' found %d subdomains.", job.JobId, len(findings))

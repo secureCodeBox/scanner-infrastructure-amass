@@ -1,5 +1,6 @@
 [![Build Status](https://travis-ci.com/secureCodeBox/scanner-infrastructure-amass.svg?branch=master)](https://travis-ci.com/secureCodeBox/scanner-infrastructure-amass)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![GitHub release](https://img.shields.io/github/release/secureCodeBox/scanner-infrastructure-amass.svg)](https://github.com/secureCodeBox/scanner-infrastructure-amass/releases/latest)
 
 # About
 
