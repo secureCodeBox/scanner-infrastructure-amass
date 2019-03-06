@@ -127,6 +127,7 @@ func workOnJobs(jobs <-chan ScannerScaffolding.ScanJob, results chan<- ScannerSc
 
 			// Begin the enumeration process
 			enum.Start()
+			<-enum.Done
 		}
 
 		logger.Infof("Subdomainscan '%s' found %d subdomains.", job.JobId, len(findings))
