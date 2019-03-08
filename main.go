@@ -125,8 +125,14 @@ func workOnJobs(jobs <-chan ScannerScaffolding.ScanJob, results chan<- ScannerSc
 				}
 			}
 
+			enum.Config.Dir = "/tmp"
+
 			// Begin the enumeration process
-			enum.Start()
+			if err := enum.Start(); err != nil {
+				logger.Errorf("Could not start the amass scan.")
+				logger.Error(err)
+				failures <- createJobFailure(job.JobId, "Failed to start amass scan", err.Error())
+			}
 			<-enum.Done
 		}
 
