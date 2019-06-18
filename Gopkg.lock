@@ -2,7 +2,7 @@
 
 
 [[projects]]
-  digest = "1:3c8fc280d77bf10063c402f3b20832c9db8488ef5e78e31241a82e4203efcaae"
+  digest = "1:99f06aadae4ea14e9c2730ba610c4850aad914dad9feceb39dc3f8a3feb960c3"
   name = "github.com/OWASP/Amass"
   packages = [
     "amass",
@@ -13,8 +13,8 @@
     "amass/utils/viz",
   ]
   pruneopts = "UT"
-  revision = "1ca95091caa56436d6c7f22c1fc344c9fbb116e4"
-  version = "3.0.4"
+  revision = "7f3d29928fae3c8b6edb268bccdd9e0fbff382d7"
+  version = "3.0.5"
 
 [[projects]]
   digest = "1:064cb6ad3c31493d6c1485cf6d7d159665a1acbc9921722981a94125dd9e6ee9"
