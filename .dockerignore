@@ -1,4 +1,5 @@
 Dockerfile
 main
 vendor/
+amass_output/
 .git
