@@ -1,5 +1,7 @@
 ---
-title: Amass
+title: "Amass"
+path: "scanner/Amass"
+category: "scanner"
 
 ---
 
