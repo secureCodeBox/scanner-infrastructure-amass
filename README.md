@@ -15,6 +15,8 @@ This repository contains a self contained µService utilizing the Amass Subdomai
 
 Amass is a awesome tool to find subdomains of a domain using multiple techniques all at once.
 
+<!-- end -->
+
 Further Documentation:
 
 -   [Project Description][scb-project]
