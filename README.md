@@ -5,17 +5,15 @@ category: "scanner"
 
 ---
 
-[![Build Status](https://travis-ci.com/secureCodeBox/scanner-infrastructure-amass.svg?branch=master)](https://travis-ci.com/secureCodeBox/scanner-infrastructure-amass)
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![GitHub release](https://img.shields.io/github/release/secureCodeBox/scanner-infrastructure-amass.svg)](https://github.com/secureCodeBox/scanner-infrastructure-amass/releases/latest)
+The OWASP Amass Project has developed a tool to help information security professionals perform network mapping of attack surfaces and perform external asset discovery using open source information gathering and active reconnaissance techniques.
+
+<!-- end -->
 
 # About
 
 This repository contains a self contained µService utilizing the Amass Subdomain Scanner for the secureCodeBox project.
 
 Amass is a awesome tool to find subdomains of a domain using multiple techniques all at once.
-
-<!-- end -->
 
 Further Documentation:
 
@@ -44,6 +42,11 @@ To configure this service specify the following environment variables:
 ## Build with docker
 
 To build the docker container run: `docker build -t IMAGE_NAME:LABEL .`
+
+[![Build Status](https://travis-ci.com/secureCodeBox/scanner-infrastructure-amass.svg?branch=master)](https://travis-ci.com/secureCodeBox/scanner-infrastructure-amass)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![GitHub release](https://img.shields.io/github/release/secureCodeBox/scanner-infrastructure-amass.svg)](https://github.com/secureCodeBox/scanner-infrastructure-amass/releases/latest)
+
 
 [scb-project]: https://github.com/secureCodeBox/secureCodeBox
 [scb-developer-guide]: https://github.com/secureCodeBox/secureCodeBox/blob/develop/docs/developer-guide/README.md
