@@ -2,6 +2,7 @@
 title: "Amass"
 path: "scanner/Amass"
 category: "scanner"
+usecase: "Subdomain Scanner"
 
 ---
 
