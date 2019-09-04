@@ -3,6 +3,7 @@ title: "Amass"
 path: "scanner/Amass"
 category: "scanner"
 usecase: "Subdomain Scanner"
+release: "https://img.shields.io/github/release/secureCodeBox/scanner-infrastructure-amass.svg"
 
 ---
 
