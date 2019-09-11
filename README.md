@@ -7,23 +7,85 @@ release: "https://img.shields.io/github/release/secureCodeBox/scanner-infrastruc
 
 ---
 
+![owasp logo](https://www.owasp.org/images/3/32/OWASP_Project_Header.jpg)
+
 The OWASP Amass Project has developed a tool to help information security professionals perform network mapping of attack surfaces and perform external asset discovery using open source information gathering and active reconnaissance techniques.
 
 <!-- end -->
 
 # About
 
-This repository contains a self contained µService utilizing the Amass Subdomain Scanner for the secureCodeBox project.
+This repository contains a self contained µService utilizing the Amass Subdomain Scanner for the secureCodeBox project. To learn more about the Amass scanner itself visit [OWASP_Amass_Project] or [Amass GitHub].
 
-Amass is a awesome tool to find subdomains of a domain using multiple techniques all at once.
+## Amass parameters
 
-Further Documentation:
+To hand over supported parameters through api usage, you can set following attributes:
 
--   [Project Description][scb-project]
--   [Developer Guide][scb-developer-guide]
--   [User Guide][scb-user-guide]
+```json
+[
+  {
+    "name": "amass",
+    "context": "some Context",
+    "target": {
+      "name": "targetName",
+      "location": "http://your-target.com/",
+      "attributes": {
+        "NO_DNS": "[true | false]"
+      }
+    }
+  }
+]
+```
 
-## Configuration Options
+## Example
+
+Example configuration:
+
+```json
+[
+  {
+    "name": "amass",
+    "context": "Example Test",
+    "target": {
+      "name": "BodgeIT on OpenShift",
+      "location": "bodgeit-scb.cloudapps.iterashift.com",
+      "attributes": {}
+    }
+  }
+]
+```
+
+Example Output:
+
+```json
+{
+    "findings": [
+      {
+        "id":"c834c9cb-c3a6-4983-41bd-70df4dd4e5a8",
+        "name":"www.https://bodgeit-scb.cloudapps.iterashift.com/",
+        "description":"Found subdomain www.https://bodgeit-scb.cloudapps.iterashift.com/",
+        "category":"Subdomain",
+        "osi_layer":"NETWORK",
+        "severity":"INFORMATIONAL",
+        "reference":{},
+        "attributes":{
+          "ADDRESSES":[],
+          "DOMAIN":"https://bodgeit-scb.cloudapps.iterashift.com/",
+          "NAME":"www.https://bodgeit-scb.cloudapps.iterashift.com/",
+          "SOURCE":"Google",
+          "Tag":"scrape"
+          },
+        "location":"www.https://bodgeit-scb.cloudapps.iterashift.com/",
+        "false_positive":false
+      }
+    ]
+  }
+```
+
+
+## Development
+
+### Configuration Options
 
 To configure this service specify the following environment variables:
 
@@ -50,7 +112,5 @@ To build the docker container run: `docker build -t IMAGE_NAME:LABEL .`
 [![GitHub release](https://img.shields.io/github/release/secureCodeBox/scanner-infrastructure-amass.svg)](https://github.com/secureCodeBox/scanner-infrastructure-amass/releases/latest)
 
 
-[scb-project]: https://github.com/secureCodeBox/secureCodeBox
-[scb-developer-guide]: https://github.com/secureCodeBox/secureCodeBox/blob/develop/docs/developer-guide/README.md
-[scb-developer-guidelines]: https://github.com/secureCodeBox/secureCodeBox/blob/develop/docs/developer-guide/README.md#guidelines
-[scb-user-guide]: https://github.com/secureCodeBox/secureCodeBox/tree/develop/docs/user-guide
+[OWASP_Amass_Project]: https://www.owasp.org/index.php/OWASP_Amass_Project
+[Amass GitHub]: https://github.com/OWASP/Amass
