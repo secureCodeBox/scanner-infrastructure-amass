@@ -7,7 +7,7 @@ release: "https://img.shields.io/github/release/secureCodeBox/scanner-infrastruc
 
 ---
 
-![owasp logo](https://www.owasp.org/images/3/32/OWASP_Project_Header.jpg)
+![owasp logo](https://www.owasp.org/images/thumb/f/fe/Owasp_logo.jpg/320px-Owasp_logo.jpg)
 
 The OWASP Amass Project has developed a tool to help information security professionals perform network mapping of attack surfaces and perform external asset discovery using open source information gathering and active reconnaissance techniques.
 
