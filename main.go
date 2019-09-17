@@ -10,6 +10,7 @@ import (
 
 	"github.com/OWASP/Amass/enum"
 	"github.com/OWASP/Amass/requests"
+	"github.com/OWASP/Amass/format"
 	uuid "github.com/nu7hatch/gouuid"
 	"github.com/op/go-logging"
 	"github.com/secureCodeBox/scanner-infrastructure-amass/ScannerScaffolding"
@@ -148,7 +149,7 @@ func workOnJobs(jobs <-chan ScannerScaffolding.ScanJob, results chan<- ScannerSc
 
 func testScannerFunctionality() ScannerScaffolding.TestRun {
 	return ScannerScaffolding.TestRun{
-		Version:    "Unkown",
+		Version:    format.Version,
 		Details:    "Not feasible",
 		Successful: true,
 	}
