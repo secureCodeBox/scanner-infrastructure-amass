@@ -8,8 +8,9 @@ import (
 	"os"
 	"time"
 
-	"github.com/OWASP/Amass/amass"
-	"github.com/OWASP/Amass/amass/core"
+	"github.com/OWASP/Amass/enum"
+	"github.com/OWASP/Amass/requests"
+	"github.com/OWASP/Amass/format"
 	uuid "github.com/nu7hatch/gouuid"
 	"github.com/op/go-logging"
 	"github.com/secureCodeBox/scanner-infrastructure-amass/ScannerScaffolding"
@@ -35,7 +36,7 @@ func createJobFailure(jobId, message, details string) ScannerScaffolding.JobFail
 func workOnJobs(jobs <-chan ScannerScaffolding.ScanJob, results chan<- ScannerScaffolding.JobResult, failures chan<- ScannerScaffolding.JobFailure) {
 	for job := range jobs {
 		logger.Infof("Working on job '%s'", job.JobId)
-		masterOutput := make(chan *core.Output)
+		masterOutput := make(chan *requests.Output)
 
 		// Seed the default pseudo-random number generator
 		rand.Seed(time.Now().UTC().UnixNano())
@@ -97,43 +98,43 @@ func workOnJobs(jobs <-chan ScannerScaffolding.ScanJob, results chan<- ScannerSc
 		}()
 
 		for _, target := range job.Targets {
-			enum := amass.NewEnumeration()
+			enumeration := enum.NewEnumeration()
 
 			go func() {
-				for result := range enum.Output {
+				for result := range enumeration.Output {
 					masterOutput <- result
 				}
 			}()
 
 			if _, isDebug := os.LookupEnv("DEBUG"); isDebug {
 				logger.Infof("Setting up high verbosity Logger for amass.")
-				enum.Config.Log = log.New(os.Stdout, "amass", log.Ldate|log.Ltime|log.Lshortfile)
+				enumeration.Config.Log = log.New(os.Stdout, "amass", log.Ldate|log.Ltime|log.Lshortfile)
 			}
 
 			logger.Infof("Job '%s' is scanning subdomains for '%s'", job.JobId, target.Location)
 
-			enum.Config.AddDomain(target.Location)
+			enumeration.Config.AddDomain(target.Location)
 
 			if _, exists := target.Attributes["NO_DNS"]; exists == false {
-				enum.Config.Passive = true
+				enumeration.Config.Passive = true
 			} else {
 				switch noDNS := target.Attributes["NO_DNS"].(type) {
 				case bool:
-					enum.Config.Passive = noDNS
+					enumeration.Config.Passive = noDNS
 				default:
 					failures <- createJobFailure(job.JobId, "Scan Parameter 'NO_DNS' must be boolean", "")
 				}
 			}
 
-			enum.Config.Dir = "/tmp"
+			enumeration.Config.Dir = "/tmp"
 
 			// Begin the enumeration process
-			if err := enum.Start(); err != nil {
+			if err := enumeration.Start(); err != nil {
 				logger.Errorf("Could not start the amass scan.")
 				logger.Error(err)
 				failures <- createJobFailure(job.JobId, "Failed to start amass scan", err.Error())
 			}
-			<-enum.Done
+			enumeration.Done()
 		}
 
 		logger.Infof("Subdomainscan '%s' found %d subdomains.", job.JobId, len(findings))
@@ -148,7 +149,7 @@ func workOnJobs(jobs <-chan ScannerScaffolding.ScanJob, results chan<- ScannerSc
 
 func testScannerFunctionality() ScannerScaffolding.TestRun {
 	return ScannerScaffolding.TestRun{
-		Version:    amass.Version,
+		Version:    format.Version,
 		Details:    "Not feasible",
 		Successful: true,
 	}
