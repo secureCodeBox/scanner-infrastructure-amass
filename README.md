@@ -47,8 +47,8 @@ Example configuration:
     "name": "amass",
     "context": "Example Test",
     "target": {
-      "name": "BodgeIT on OpenShift",
-      "location": "bodgeit-scb.cloudapps.iterashift.com",
+      "name": "example.com",
+      "location": "example.com",
       "attributes": {}
     }
   }
@@ -62,20 +62,38 @@ Example Output:
     "findings": [
       {
         "id":"c834c9cb-c3a6-4983-41bd-70df4dd4e5a8",
-        "name":"www.https://bodgeit-scb.cloudapps.iterashift.com/",
-        "description":"Found subdomain www.https://bodgeit-scb.cloudapps.iterashift.com/",
+        "name":"www.example.com",
+        "description":"Found subdomain www.example.com",
         "category":"Subdomain",
         "osi_layer":"NETWORK",
         "severity":"INFORMATIONAL",
         "reference":{},
         "attributes":{
           "ADDRESSES":[],
-          "DOMAIN":"https://bodgeit-scb.cloudapps.iterashift.com/",
-          "NAME":"www.https://bodgeit-scb.cloudapps.iterashift.com/",
+          "DOMAIN":"https://www.example.com/",
+          "NAME":"www.example.com",
           "SOURCE":"Google",
           "Tag":"scrape"
           },
-        "location":"www.https://bodgeit-scb.cloudapps.iterashift.com/",
+        "location":"www.example.com",
+        "false_positive":false
+      },
+      {
+        "id":"33e8da26-f8cb-4a09-a90c-44823320b868",
+        "name":"gitlab.example.com",
+        "description":"Found subdomain gitlab.example.com",
+        "category":"Subdomain",
+        "osi_layer":"NETWORK",
+        "severity":"INFORMATIONAL",
+        "reference":{},
+        "attributes":{
+          "ADDRESSES":[],
+          "DOMAIN":"https://gitlab.example.com/",
+          "NAME":"gitlab.example.com",
+          "SOURCE":"Google",
+          "Tag":"scrape"
+          },
+        "location":"gitlab.example.com",
         "false_positive":false
       }
     ]
