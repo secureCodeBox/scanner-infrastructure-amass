@@ -102,7 +102,8 @@ func workOnJobs(jobs <-chan ScannerScaffolding.ScanJob, results chan<- ScannerSc
 		for _, target := range job.Targets {
 			sys, err := services.NewLocalSystem(config.NewConfig())
 			if err != nil {
-				return
+				failures <- createJobFailure(job.JobId, "Failed to initialize local scan system", "Please open up a issue on Github. This error is not really expected to happen...")
+				panic("Failed to initialize local scan system")
 			}
 			enumeration := enum.NewEnumeration(sys)
 
