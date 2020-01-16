@@ -8,9 +8,11 @@ import (
 	"os"
 	"time"
 
-	"github.com/OWASP/Amass/enum"
-	"github.com/OWASP/Amass/requests"
-	"github.com/OWASP/Amass/format"
+	"github.com/OWASP/Amass/v3/config"
+	"github.com/OWASP/Amass/v3/enum"
+	"github.com/OWASP/Amass/v3/format"
+	"github.com/OWASP/Amass/v3/requests"
+	"github.com/OWASP/Amass/v3/services"
 	uuid "github.com/nu7hatch/gouuid"
 	"github.com/op/go-logging"
 	"github.com/secureCodeBox/scanner-infrastructure-amass/ScannerScaffolding"
@@ -98,7 +100,11 @@ func workOnJobs(jobs <-chan ScannerScaffolding.ScanJob, results chan<- ScannerSc
 		}()
 
 		for _, target := range job.Targets {
-			enumeration := enum.NewEnumeration()
+			sys, err := services.NewLocalSystem(config.NewConfig())
+			if err != nil {
+				return
+			}
+			enumeration := enum.NewEnumeration(sys)
 
 			go func() {
 				for result := range enumeration.Output {
