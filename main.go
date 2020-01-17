@@ -13,8 +13,8 @@ import (
 	"github.com/OWASP/Amass/v3/format"
 	"github.com/OWASP/Amass/v3/requests"
 	"github.com/OWASP/Amass/v3/services"
-	uuid "github.com/nu7hatch/gouuid"
 	"github.com/op/go-logging"
+	uuid "github.com/satori/go.uuid"
 	"github.com/secureCodeBox/scanner-infrastructure-amass/ScannerScaffolding"
 )
 
@@ -55,12 +55,7 @@ func workOnJobs(jobs <-chan ScannerScaffolding.ScanJob, results chan<- ScannerSc
 					}
 
 					logger.Debugf("Found new subdomain '%s'", result.Name)
-					u, err := uuid.NewV4()
-					if err != nil {
-						logger.Errorf("Could not create UUID for subdomain finding '%s'.", result.Domain)
-						failures <- createJobFailure(job.JobId, "Could not create UUID for finding", "")
-						return
-					}
+					u := uuid.NewV4()
 
 					addresses := make([]Address, 0)
 					for _, address := range result.Addresses {
