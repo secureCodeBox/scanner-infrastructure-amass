@@ -9,8 +9,8 @@ import (
 	"os"
 	"time"
 
+	uuid "github.com/gofrs/uuid"
 	"github.com/op/go-logging"
-	uuid "github.com/satori/go.uuid"
 )
 
 type ScanJob struct {
@@ -412,7 +412,7 @@ func CreateJobConnection(configuration ScannerConfiguration) ScannerScaffolding 
 	results := make(chan JobResult)
 	failures := make(chan JobFailure)
 
-	u := uuid.NewV4()
+	u := uuid.Must(uuid.NewV4())
 	scannerId := u.String()
 
 	scanner := ScannerScaffolding{

@@ -14,7 +14,7 @@ import (
 	"github.com/OWASP/Amass/v3/requests"
 	"github.com/OWASP/Amass/v3/services"
 	"github.com/op/go-logging"
-	uuid "github.com/satori/go.uuid"
+	uuid "github.com/gofrs/uuid"
 	"github.com/secureCodeBox/scanner-infrastructure-amass/ScannerScaffolding"
 )
 
@@ -55,7 +55,7 @@ func workOnJobs(jobs <-chan ScannerScaffolding.ScanJob, results chan<- ScannerSc
 					}
 
 					logger.Debugf("Found new subdomain '%s'", result.Name)
-					u := uuid.NewV4()
+					u := uuid.Must(uuid.NewV4())
 
 					addresses := make([]Address, 0)
 					for _, address := range result.Addresses {
