@@ -9,7 +9,7 @@ import (
 	"os"
 	"time"
 
-	uuid "github.com/nu7hatch/gouuid"
+	uuid "github.com/gofrs/uuid"
 	"github.com/op/go-logging"
 )
 
@@ -412,7 +412,7 @@ func CreateJobConnection(configuration ScannerConfiguration) ScannerScaffolding 
 	results := make(chan JobResult)
 	failures := make(chan JobFailure)
 
-	u, _ := uuid.NewV4()
+	u := uuid.Must(uuid.NewV4())
 	scannerId := u.String()
 
 	scanner := ScannerScaffolding{

@@ -1,12 +1,6 @@
 FROM golang AS builder
 
-# Download and install the latest release of dep
-ADD https://github.com/golang/dep/releases/download/v0.5.0/dep-linux-amd64 /usr/bin/dep
-RUN chmod +x /usr/bin/dep
-
 WORKDIR /go/src/github.com/secureCodeBox/scanner-infrastructure-amass/
-COPY Gopkg.toml Gopkg.lock ./
-RUN dep ensure --vendor-only
 COPY . .
 
 # Otherwise binaries would link to libaries which dont exist on alpine.

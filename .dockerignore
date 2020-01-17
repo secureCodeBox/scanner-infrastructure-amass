@@ -3,3 +3,7 @@ main
 vendor/
 amass_output/
 .git
+.travis/
+.idea/
+.github/
+README.md

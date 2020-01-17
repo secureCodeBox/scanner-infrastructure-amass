@@ -8,11 +8,13 @@ import (
 	"os"
 	"time"
 
-	"github.com/OWASP/Amass/enum"
-	"github.com/OWASP/Amass/requests"
-	"github.com/OWASP/Amass/format"
-	uuid "github.com/nu7hatch/gouuid"
+	"github.com/OWASP/Amass/v3/config"
+	"github.com/OWASP/Amass/v3/enum"
+	"github.com/OWASP/Amass/v3/format"
+	"github.com/OWASP/Amass/v3/requests"
+	"github.com/OWASP/Amass/v3/services"
 	"github.com/op/go-logging"
+	uuid "github.com/gofrs/uuid"
 	"github.com/secureCodeBox/scanner-infrastructure-amass/ScannerScaffolding"
 )
 
@@ -53,12 +55,7 @@ func workOnJobs(jobs <-chan ScannerScaffolding.ScanJob, results chan<- ScannerSc
 					}
 
 					logger.Debugf("Found new subdomain '%s'", result.Name)
-					u, err := uuid.NewV4()
-					if err != nil {
-						logger.Errorf("Could not create UUID for subdomain finding '%s'.", result.Domain)
-						failures <- createJobFailure(job.JobId, "Could not create UUID for finding", "")
-						return
-					}
+					u := uuid.Must(uuid.NewV4())
 
 					addresses := make([]Address, 0)
 					for _, address := range result.Addresses {
@@ -98,7 +95,12 @@ func workOnJobs(jobs <-chan ScannerScaffolding.ScanJob, results chan<- ScannerSc
 		}()
 
 		for _, target := range job.Targets {
-			enumeration := enum.NewEnumeration()
+			sys, err := services.NewLocalSystem(config.NewConfig())
+			if err != nil {
+				failures <- createJobFailure(job.JobId, "Failed to initialize local scan system", "Please open up a issue on Github. This error is not really expected to happen...")
+				panic("Failed to initialize local scan system")
+			}
+			enumeration := enum.NewEnumeration(sys)
 
 			go func() {
 				for result := range enumeration.Output {
