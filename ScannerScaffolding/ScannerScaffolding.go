@@ -11,6 +11,7 @@ import (
 
 	uuid "github.com/gofrs/uuid"
 	"github.com/op/go-logging"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 type ScanJob struct {
@@ -395,6 +396,7 @@ func statusPageHandler(scanner *ScannerScaffolding) func(w http.ResponseWriter, 
 
 func (scanner *ScannerScaffolding) StartStatusServer() {
 	http.HandleFunc("/status", statusPageHandler(scanner))
+	http.Handle("/metrics", promhttp.Handler())
 	http.ListenAndServe(":8080", nil)
 }
 
