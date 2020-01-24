@@ -35,6 +35,13 @@ func createJobFailure(jobId, message, details string) ScannerScaffolding.JobFail
 }
 
 func workOnJobs(jobs <-chan ScannerScaffolding.ScanJob, results chan<- ScannerScaffolding.JobResult, failures chan<- ScannerScaffolding.JobFailure) {
+	logger.Debug("Creating Scan system")
+	sys, err := services.NewLocalSystem(config.NewConfig())
+	if err != nil {
+		panic("Failed to initialize local scan system")
+	}
+	logger.Debug("Created Scan System")
+
 JOBLOOP:
 	for job := range jobs {
 		logger.Infof("Working on job '%s'", job.JobId)
@@ -52,13 +59,6 @@ JOBLOOP:
 
 		target := job.Targets[0]
 
-		logger.Debug("Creating Scan system")
-		sys, err := services.NewLocalSystem(config.NewConfig())
-		if err != nil {
-			failures <- createJobFailure(job.JobId, "Failed to initialize local scan system", "Please open up a issue on Github. This error is not really expected to happen...")
-			panic("Failed to initialize local scan system")
-		}
-		logger.Debug("Created Scan System")
 		logger.Debug("Creating enumeration")
 		enumeration := enum.NewEnumeration(sys)
 		logger.Debug("Created enumeration")
