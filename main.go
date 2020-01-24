@@ -13,8 +13,8 @@ import (
 	"github.com/OWASP/Amass/v3/format"
 	"github.com/OWASP/Amass/v3/requests"
 	"github.com/OWASP/Amass/v3/services"
-	"github.com/op/go-logging"
 	uuid "github.com/gofrs/uuid"
+	"github.com/op/go-logging"
 	"github.com/secureCodeBox/scanner-infrastructure-amass/ScannerScaffolding"
 )
 
