@@ -45,18 +45,23 @@ JOBLOOP:
 		findings := make([]ScannerScaffolding.Finding, 0)
 
 		if len(job.Targets) > 1 {
+			logger.Error("More than one target was configured. Amass scanner now only supports one target at a time.")
 			failures <- createJobFailure(job.JobId, "Amass scans only support one target at a time", "If you need more targets you need to start multiple securityTests")
 			continue JOBLOOP
 		}
 
 		target := job.Targets[0]
 
+		logger.Debug("Creating Scan system")
 		sys, err := services.NewLocalSystem(config.NewConfig())
 		if err != nil {
 			failures <- createJobFailure(job.JobId, "Failed to initialize local scan system", "Please open up a issue on Github. This error is not really expected to happen...")
 			panic("Failed to initialize local scan system")
 		}
+		logger.Debug("Created Scan System")
+		logger.Debug("Creating enumeration")
 		enumeration := enum.NewEnumeration(sys)
+		logger.Debug("Created enumeration")
 
 		if _, isDebug := os.LookupEnv("DEBUG"); isDebug {
 			logger.Infof("Setting up high verbosity Logger for amass.")
