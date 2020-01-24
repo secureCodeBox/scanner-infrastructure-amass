@@ -13,8 +13,8 @@ import (
 	"github.com/OWASP/Amass/v3/format"
 	"github.com/OWASP/Amass/v3/requests"
 	"github.com/OWASP/Amass/v3/services"
-	"github.com/op/go-logging"
 	uuid "github.com/gofrs/uuid"
+	"github.com/op/go-logging"
 	"github.com/secureCodeBox/scanner-infrastructure-amass/ScannerScaffolding"
 )
 
@@ -36,12 +36,16 @@ func createJobFailure(jobId, message, details string) ScannerScaffolding.JobFail
 }
 
 func workOnJobs(jobs <-chan ScannerScaffolding.ScanJob, results chan<- ScannerScaffolding.JobResult, failures chan<- ScannerScaffolding.JobFailure) {
+	sys, err := services.NewLocalSystem(config.NewConfig())
+	if err != nil {
+		panic("Failed to initialize local scan system")
+	}
+	// Seed the default pseudo-random number generator
+	rand.Seed(time.Now().UTC().UnixNano())
+
 	for job := range jobs {
 		logger.Infof("Working on job '%s'", job.JobId)
 		masterOutput := make(chan *requests.Output)
-
-		// Seed the default pseudo-random number generator
-		rand.Seed(time.Now().UTC().UnixNano())
 
 		findings := make([]ScannerScaffolding.Finding, 0)
 
@@ -95,11 +99,6 @@ func workOnJobs(jobs <-chan ScannerScaffolding.ScanJob, results chan<- ScannerSc
 		}()
 
 		for _, target := range job.Targets {
-			sys, err := services.NewLocalSystem(config.NewConfig())
-			if err != nil {
-				failures <- createJobFailure(job.JobId, "Failed to initialize local scan system", "Please open up a issue on Github. This error is not really expected to happen...")
-				panic("Failed to initialize local scan system")
-			}
 			enumeration := enum.NewEnumeration(sys)
 
 			go func() {
