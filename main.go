@@ -6,6 +6,7 @@ import (
 	"math/rand"
 	"net"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/OWASP/Amass/v3/config"
@@ -97,11 +98,14 @@ func workOnJobs(jobs <-chan ScannerScaffolding.ScanJob, results chan<- ScannerSc
 				}
 			}
 		}()
+		var wg sync.WaitGroup
 
 		for _, target := range job.Targets {
 			enumeration := enum.NewEnumeration(sys)
 
+			wg.Add(1)
 			go func() {
+				defer wg.Done()
 				for result := range enumeration.Output {
 					masterOutput <- result
 				}
@@ -136,6 +140,9 @@ func workOnJobs(jobs <-chan ScannerScaffolding.ScanJob, results chan<- ScannerSc
 				failures <- createJobFailure(job.JobId, "Failed to start amass scan", err.Error())
 			}
 			enumeration.Done()
+
+			wg.Wait()
+			close(masterOutput)
 		}
 
 		logger.Infof("Subdomainscan '%s' found %d subdomains.", job.JobId, len(findings))
