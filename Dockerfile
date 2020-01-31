@@ -1,12 +1,19 @@
 FROM golang AS builder
 
 WORKDIR /go/src/github.com/secureCodeBox/scanner-infrastructure-amass/
-COPY . .
+
+COPY go.mod go.sum ./
+
+# cache deps before building and copying source so that we don't need to re-download as much
+# and so that source changes don't invalidate our downloaded layer
+RUN go mod download
 
 # Otherwise binaries would link to libaries which dont exist on alpine.
 # See: https://stackoverflow.com/questions/36279253/go-compiled-binary-wont-run-in-an-alpine-docker-container-on-ubuntu-host
 ENV CGO_ENABLED 0
 
+COPY main.go main.go
+COPY ScannerScaffolding/ ./ScannerScaffolding/
 RUN go build main.go
 
 FROM alpine
