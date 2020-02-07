@@ -28,9 +28,9 @@ type Address struct {
 	Description string     `json:"DESCRIPTION"`
 }
 
-func createJobFailure(jobId, message, details string) ScannerScaffolding.JobFailure {
+func createJobFailure(jobID, message, details string) ScannerScaffolding.JobFailure {
 	return ScannerScaffolding.JobFailure{
-		JobId:        jobId,
+		JobId:        jobID,
 		ErrorMessage: message,
 		ErrorDetails: details,
 	}
