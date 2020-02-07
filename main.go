@@ -152,8 +152,11 @@ func workOnJobs(jobs <-chan ScannerScaffolding.ScanJob, results chan<- ScannerSc
 				logger.Error(err)
 				failures <- createJobFailure(job.JobId, "Failed to start amass scan", err.Error())
 			}
+
+			// Wait for scan to complete
 			enumeration.Done()
 
+			// Copy individual amass results over to master output channel
 			for result := range enumeration.Output {
 				masterOutput <- result
 			}
