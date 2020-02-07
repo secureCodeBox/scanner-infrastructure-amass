@@ -97,8 +97,11 @@ func gatherMultipleAmassResultsIntoOneScanReport(jobID string, amassResults <-ch
 	logger.Infof("Subdomainscan '%s' found %d subdomains.", jobID, len(findings))
 
 	if err != nil {
-		logger.Warningf("Scan for Job '%s' timed out!", jobID)
 		failures <- createJobFailure(jobID, "Subdomain Scan Timed out", "Subdomainscans are limited to a two hour timeframe")
+		logger.Errorf("Scan for Job '%s' timed out!", jobID)
+		// Give the Wrapper some time to submit the failure report
+		time.Sleep(5 * Time.Second)
+		panic("Scan Timeouts generally mean that the scanner instance is unhealthy and needs to be restarted")
 	}
 
 	results <- ScannerScaffolding.JobResult{
