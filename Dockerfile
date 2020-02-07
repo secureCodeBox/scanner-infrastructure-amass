@@ -16,21 +16,13 @@ COPY main.go main.go
 COPY ScannerScaffolding/ ./ScannerScaffolding/
 RUN go build main.go
 
-FROM alpine
+FROM gcr.io/distroless/static
 
-RUN apk --update upgrade && \
-    apk add curl ca-certificates && \
-    update-ca-certificates && \
-    rm -rf /var/cache/apk/*
-
-HEALTHCHECK --interval=30s --timeout=5s --start-period=120s --retries=3 CMD curl --fail http://localhost:8080/status || exit 1
+# HEALTHCHECK --interval=30s --timeout=5s --start-period=120s --retries=3 CMD curl --fail http://localhost:8080/status || exit 1
 
 COPY --from=builder /go/src/github.com/secureCodeBox/scanner-infrastructure-amass/main /scanner-infrastructure-amass/main
 
-RUN chmod +x scanner-infrastructure-amass/main
-RUN addgroup -S amass_group && adduser -S -g amass_group amass_user
-
-USER amass_user
+USER nonroot
 
 ARG COMMIT_ID=unkown
 ARG REPOSITORY_URL=unkown
@@ -56,4 +48,4 @@ LABEL org.opencontainers.image.title="secureCodeBox scanner-infrastructure-amass
 
 EXPOSE 8080
 
-CMD scanner-infrastructure-amass/main
+CMD ["scanner-infrastructure-amass/main"]
