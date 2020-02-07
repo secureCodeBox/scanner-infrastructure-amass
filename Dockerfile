@@ -8,13 +8,9 @@ COPY go.mod go.sum ./
 # and so that source changes don't invalidate our downloaded layer
 RUN go mod download
 
-# Otherwise binaries would link to libaries which dont exist on alpine.
-# See: https://stackoverflow.com/questions/36279253/go-compiled-binary-wont-run-in-an-alpine-docker-container-on-ubuntu-host
-ENV CGO_ENABLED 0
-
 COPY main.go main.go
 COPY ScannerScaffolding/ ./ScannerScaffolding/
-RUN go build main.go
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GO111MODULE=on go build main.go
 
 FROM gcr.io/distroless/static@sha256:c6d5981545ce1406d33e61434c61e9452dad93ecd8397c41e89036ef977a88f4
 
