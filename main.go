@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"math/rand"
@@ -69,8 +70,30 @@ func CreateFinding(amassResult *requests.Output) ScannerScaffolding.Finding {
 	}
 }
 
+func configureAmassScan(jobID string, target ScannerScaffolding.Target, localSystem *services.LocalSystem) (*enum.Enumeration, error) {
+	enumeration := enum.NewEnumeration(localSystem)
+	if _, isDebug := os.LookupEnv("DEBUG"); isDebug {
+		logger.Infof("Setting up high verbosity Logger for amass.")
+		enumeration.Config.Log = log.New(os.Stdout, "amass", log.Ldate|log.Ltime|log.Lshortfile)
+	}
+	enumeration.Config.AddDomain(target.Location)
+	if _, exists := target.Attributes["NO_DNS"]; exists == false {
+		enumeration.Config.Passive = true
+	} else {
+		switch noDNS := target.Attributes["NO_DNS"].(type) {
+		case bool:
+			enumeration.Config.Passive = noDNS
+		default:
+			return nil, errors.New("Scan Parameter 'NO_DNS' must be boolean")
+		}
+	}
+	enumeration.Config.Dir = "/tmp"
+
+	return enumeration, nil
+}
+
 func workOnJobs(jobs <-chan ScannerScaffolding.ScanJob, results chan<- ScannerScaffolding.JobResult, failures chan<- ScannerScaffolding.JobFailure) {
-	sys, err := services.NewLocalSystem(config.NewConfig())
+	localSystem, err := services.NewLocalSystem(config.NewConfig())
 	if err != nil {
 		panic("Failed to initialize local scan system")
 	}
@@ -83,25 +106,12 @@ func workOnJobs(jobs <-chan ScannerScaffolding.ScanJob, results chan<- ScannerSc
 		findings := make([]ScannerScaffolding.Finding, 0)
 
 		for _, target := range job.Targets {
-			// Configure amass scan
-			enumeration := enum.NewEnumeration(sys)
-			if _, isDebug := os.LookupEnv("DEBUG"); isDebug {
-				logger.Infof("Setting up high verbosity Logger for amass.")
-				enumeration.Config.Log = log.New(os.Stdout, "amass", log.Ldate|log.Ltime|log.Lshortfile)
-			}
 			logger.Infof("Job '%s' is scanning subdomains for '%s'", job.JobId, target.Location)
-			enumeration.Config.AddDomain(target.Location)
-			if _, exists := target.Attributes["NO_DNS"]; exists == false {
-				enumeration.Config.Passive = true
-			} else {
-				switch noDNS := target.Attributes["NO_DNS"].(type) {
-				case bool:
-					enumeration.Config.Passive = noDNS
-				default:
-					failures <- createJobFailure(job.JobId, "Scan Parameter 'NO_DNS' must be boolean", "")
-				}
+
+			enumeration, err := configureAmassScan(job.JobId, target, localSystem)
+			if err != nil {
+				failures <- createJobFailure(job.JobId, "Scan Parameter 'NO_DNS' must be boolean", "")
 			}
-			enumeration.Config.Dir = "/tmp"
 
 			// Begin the enumeration process
 			if err := enumeration.Start(); err != nil {
