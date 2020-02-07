@@ -70,6 +70,9 @@ func CreateFinding(amassResult *requests.Output) ScannerScaffolding.Finding {
 	}
 }
 
+// ErrorNoDNSConfig NoDNS needs to be of boolean value
+var ErrorNoDNSConfig = errors.New("Scan Parameter 'NO_DNS' must be boolean")
+
 func configureAmassScan(jobID string, target ScannerScaffolding.Target, localSystem *services.LocalSystem) (*enum.Enumeration, error) {
 	enumeration := enum.NewEnumeration(localSystem)
 	if _, isDebug := os.LookupEnv("DEBUG"); isDebug {
@@ -84,7 +87,7 @@ func configureAmassScan(jobID string, target ScannerScaffolding.Target, localSys
 		case bool:
 			enumeration.Config.Passive = noDNS
 		default:
-			return nil, errors.New("Scan Parameter 'NO_DNS' must be boolean")
+			return nil, ErrorNoDNSConfig
 		}
 	}
 	enumeration.Config.Dir = "/tmp"
@@ -109,8 +112,10 @@ func workOnJobs(jobs <-chan ScannerScaffolding.ScanJob, results chan<- ScannerSc
 			logger.Infof("Job '%s' is scanning subdomains for '%s'", job.JobId, target.Location)
 
 			enumeration, err := configureAmassScan(job.JobId, target, localSystem)
-			if err != nil {
+			if errors.Is(err, ErrorNoDNSConfig) {
 				failures <- createJobFailure(job.JobId, "Scan Parameter 'NO_DNS' must be boolean", "")
+			} else if err != nil {
+				failures <- createJobFailure(job.JobId, "Error while configuring scan", "")
 			}
 
 			// Begin the enumeration process
