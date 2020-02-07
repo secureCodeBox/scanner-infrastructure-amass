@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"math/rand"
@@ -70,47 +69,6 @@ func CreateFinding(amassResult *requests.Output) ScannerScaffolding.Finding {
 	}
 }
 
-// converts amass output channel into finding list over time
-func gatherFindingsFromAmass(amassResults <-chan *requests.Output) ([]ScannerScaffolding.Finding, error) {
-	findings := make([]ScannerScaffolding.Finding, 0)
-
-	for {
-		logger.Debug("Waiting for new subdomains.")
-		select {
-		case result, more := <-amassResults:
-			if more == false {
-				return findings, nil
-			}
-
-			logger.Debugf("Found new subdomain '%s'", result.Name)
-
-			findings = append(findings, CreateFinding(result))
-		case <-time.After(2 * time.Hour):
-			return nil, errors.New("Scan timed out")
-		}
-	}
-}
-
-// converts amass output channel into Scan Report / Job Result over time
-func gatherMultipleAmassResultsIntoOneScanReport(jobID string, amassResults <-chan *requests.Output, results chan<- ScannerScaffolding.JobResult, failures chan<- ScannerScaffolding.JobFailure) {
-	findings, err := gatherFindingsFromAmass(amassResults)
-	logger.Infof("Subdomainscan '%s' found %d subdomains.", jobID, len(findings))
-
-	if err != nil {
-		failures <- createJobFailure(jobID, "Subdomain Scan Timed out", "Subdomainscans are limited to a two hour timeframe")
-		logger.Errorf("Scan for Job '%s' timed out!", jobID)
-		// Give the Wrapper some time to submit the failure report
-		time.Sleep(5 * time.Second)
-		panic("Scan Timeouts generally mean that the scanner instance is unhealthy and needs to be restarted")
-	}
-
-	results <- ScannerScaffolding.JobResult{
-		JobId:       jobID,
-		Findings:    findings,
-		RawFindings: "[]",
-	}
-}
-
 func workOnJobs(jobs <-chan ScannerScaffolding.ScanJob, results chan<- ScannerScaffolding.JobResult, failures chan<- ScannerScaffolding.JobFailure) {
 	sys, err := services.NewLocalSystem(config.NewConfig())
 	if err != nil {
@@ -122,11 +80,7 @@ func workOnJobs(jobs <-chan ScannerScaffolding.ScanJob, results chan<- ScannerSc
 	for job := range jobs {
 		logger.Infof("Working on job '%s'", job.JobId)
 
-		// Create a new channel onto which the results from all amass scans of this job get pushed
-		masterOutput := make(chan *requests.Output)
-
-		// Start separate goroutine to listen on the master output and convert and submit results back to the engine when done
-		go gatherMultipleAmassResultsIntoOneScanReport(job.JobId, masterOutput, results, failures)
+		findings := make([]ScannerScaffolding.Finding, 0)
 
 		for _, target := range job.Targets {
 			// Configure amass scan
@@ -156,15 +110,21 @@ func workOnJobs(jobs <-chan ScannerScaffolding.ScanJob, results chan<- ScannerSc
 				failures <- createJobFailure(job.JobId, "Failed to start amass scan", err.Error())
 			}
 
-			// Wait for scan to complete
-			enumeration.Done()
-
-			// Copy individual amass results over to master output channel
+			logger.Debug("Started scan. Waiting for results to come in.")
 			for result := range enumeration.Output {
-				masterOutput <- result
+				logger.Debugf("Found subdomain '%s'", result.Name)
+				findings = append(findings, CreateFinding(result))
 			}
+
+			logger.Debugf("All scan results for '%s' are in. Waiting until amass marks itself as done.", target.Location)
+			enumeration.Done()
 		}
-		close(masterOutput)
+
+		results <- ScannerScaffolding.JobResult{
+			JobId:       job.JobId,
+			Findings:    findings,
+			RawFindings: "[]",
+		}
 	}
 }
 
