@@ -14,8 +14,6 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GO111MODULE=on go build main.go
 
 FROM gcr.io/distroless/static@sha256:c6d5981545ce1406d33e61434c61e9452dad93ecd8397c41e89036ef977a88f4
 
-HEALTHCHECK --interval=30s --timeout=5s --start-period=120s --retries=3 CMD curl --fail http://localhost:8080/status || exit 1
-
 COPY --from=builder /go/src/github.com/secureCodeBox/scanner-infrastructure-amass/main /scanner-infrastructure-amass/main
 
 USER nonroot
