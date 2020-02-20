@@ -1,4 +1,4 @@
-FROM golang AS builder
+FROM golang:1.13 AS builder
 
 WORKDIR /go/src/github.com/secureCodeBox/scanner-infrastructure-amass/
 
@@ -12,7 +12,7 @@ COPY main.go main.go
 COPY ScannerScaffolding/ ./ScannerScaffolding/
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GO111MODULE=on go build main.go
 
-FROM golang AS healthCheckbuilder
+FROM golang:1.13 AS healthCheckbuilder
 COPY healthcheck.go healthcheck.go
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -installsuffix cgo -o healthcheck healthcheck.go
 
