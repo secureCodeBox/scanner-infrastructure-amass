@@ -116,10 +116,8 @@ To configure this service specify the following environment variables:
 ## Local setup
 
 1. Clone the repo into your $GOPATH
-2. Install the go dependency manager "dep"
-3. Run `dep ensure` inside your repo to load the dependencies
-4. Run `go build main.go` to compile
-5. Execute the compiled `./main` file
+2. Run `go build main.go` to compile
+3. Execute the compiled `./main` file
 
 ## Build with docker
 

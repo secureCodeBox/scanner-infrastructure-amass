@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"math/rand"
@@ -27,16 +28,75 @@ type Address struct {
 	Description string     `json:"DESCRIPTION"`
 }
 
-func createJobFailure(jobId, message, details string) ScannerScaffolding.JobFailure {
+func createJobFailure(jobID, message, details string) ScannerScaffolding.JobFailure {
 	return ScannerScaffolding.JobFailure{
-		JobId:        jobId,
+		JobId:        jobID,
 		ErrorMessage: message,
 		ErrorDetails: details,
 	}
 }
 
+// CreateFinding creates a secureCodeBox Finding from an amass finding.
+func CreateFinding(amassResult *requests.Output) ScannerScaffolding.Finding {
+	u := uuid.Must(uuid.NewV4())
+
+	addresses := make([]Address, 0)
+	for _, address := range amassResult.Addresses {
+		addresses = append(addresses, Address{
+			Address:     address.Address,
+			Description: address.Description,
+			Netblock:    address.Netblock,
+			ASN:         address.ASN,
+		})
+	}
+
+	attributes := make(map[string]interface{})
+
+	attributes["Tag"] = amassResult.Tag
+	attributes["NAME"] = amassResult.Name
+	attributes["SOURCE"] = amassResult.Source
+	attributes["DOMAIN"] = amassResult.Domain
+	attributes["ADDRESSES"] = addresses
+
+	return ScannerScaffolding.Finding{
+		Id:          u.String(),
+		Name:        amassResult.Name,
+		Description: fmt.Sprintf("Found subdomain %s", amassResult.Name),
+		Location:    amassResult.Name,
+		Category:    "Subdomain",
+		Severity:    "INFORMATIONAL",
+		OsiLayer:    "NETWORK",
+		Attributes:  attributes,
+	}
+}
+
+// ErrorNoDNSConfig NoDNS needs to be of boolean value
+var ErrorNoDNSConfig = errors.New("Scan Parameter 'NO_DNS' must be boolean")
+
+func configureAmassScan(target ScannerScaffolding.Target, localSystem *services.LocalSystem) (*enum.Enumeration, error) {
+	enumeration := enum.NewEnumeration(localSystem)
+	if _, isDebug := os.LookupEnv("DEBUG"); isDebug {
+		logger.Infof("Setting up high verbosity Logger for amass.")
+		enumeration.Config.Log = log.New(os.Stdout, "amass", log.Ldate|log.Ltime|log.Lshortfile)
+	}
+	enumeration.Config.AddDomain(target.Location)
+	if _, exists := target.Attributes["NO_DNS"]; exists == false {
+		enumeration.Config.Passive = true
+	} else {
+		switch noDNS := target.Attributes["NO_DNS"].(type) {
+		case bool:
+			enumeration.Config.Passive = noDNS
+		default:
+			return nil, ErrorNoDNSConfig
+		}
+	}
+	enumeration.Config.Dir = "/tmp"
+
+	return enumeration, nil
+}
+
 func workOnJobs(jobs <-chan ScannerScaffolding.ScanJob, results chan<- ScannerScaffolding.JobResult, failures chan<- ScannerScaffolding.JobFailure) {
-	sys, err := services.NewLocalSystem(config.NewConfig())
+	localSystem, err := services.NewLocalSystem(config.NewConfig())
 	if err != nil {
 		panic("Failed to initialize local scan system")
 	}
@@ -45,89 +105,18 @@ func workOnJobs(jobs <-chan ScannerScaffolding.ScanJob, results chan<- ScannerSc
 
 	for job := range jobs {
 		logger.Infof("Working on job '%s'", job.JobId)
-		masterOutput := make(chan *requests.Output)
 
 		findings := make([]ScannerScaffolding.Finding, 0)
 
-		go func() {
-			for {
-				logger.Debug("Waiting for new subdomains.")
-				select {
-				case result, more := <-masterOutput:
-					if more == false {
-						return
-					}
-
-					logger.Debugf("Found new subdomain '%s'", result.Name)
-					u := uuid.Must(uuid.NewV4())
-
-					addresses := make([]Address, 0)
-					for _, address := range result.Addresses {
-						addresses = append(addresses, Address{
-							Address:     address.Address,
-							Description: address.Description,
-							Netblock:    address.Netblock,
-							ASN:         address.ASN,
-						})
-					}
-
-					attributes := make(map[string]interface{})
-
-					attributes["Tag"] = result.Tag
-					attributes["NAME"] = result.Name
-					attributes["SOURCE"] = result.Source
-					attributes["DOMAIN"] = result.Domain
-					attributes["ADDRESSES"] = addresses
-
-					finding := ScannerScaffolding.Finding{
-						Id:          u.String(),
-						Name:        result.Name,
-						Description: fmt.Sprintf("Found subdomain %s", result.Name),
-						Location:    result.Name,
-						Category:    "Subdomain",
-						Severity:    "INFORMATIONAL",
-						OsiLayer:    "NETWORK",
-						Attributes:  attributes,
-					}
-					findings = append(findings, finding)
-				case <-time.After(2 * time.Hour):
-					logger.Warningf("Scan for Job '%s' timed out!", job.JobId)
-					failures <- createJobFailure(job.JobId, "Subdomain Scan Timed out", "Subdomainscans are limited to a two hour timeframe")
-					return
-				}
-			}
-		}()
-
 		for _, target := range job.Targets {
-			enumeration := enum.NewEnumeration(sys)
-
-			go func() {
-				for result := range enumeration.Output {
-					masterOutput <- result
-				}
-			}()
-
-			if _, isDebug := os.LookupEnv("DEBUG"); isDebug {
-				logger.Infof("Setting up high verbosity Logger for amass.")
-				enumeration.Config.Log = log.New(os.Stdout, "amass", log.Ldate|log.Ltime|log.Lshortfile)
-			}
-
 			logger.Infof("Job '%s' is scanning subdomains for '%s'", job.JobId, target.Location)
 
-			enumeration.Config.AddDomain(target.Location)
-
-			if _, exists := target.Attributes["NO_DNS"]; exists == false {
-				enumeration.Config.Passive = true
-			} else {
-				switch noDNS := target.Attributes["NO_DNS"].(type) {
-				case bool:
-					enumeration.Config.Passive = noDNS
-				default:
-					failures <- createJobFailure(job.JobId, "Scan Parameter 'NO_DNS' must be boolean", "")
-				}
+			enumeration, err := configureAmassScan(target, localSystem)
+			if errors.Is(err, ErrorNoDNSConfig) {
+				failures <- createJobFailure(job.JobId, "Scan Parameter 'NO_DNS' must be boolean", "")
+			} else if err != nil {
+				failures <- createJobFailure(job.JobId, "Error while configuring scan", "")
 			}
-
-			enumeration.Config.Dir = "/tmp"
 
 			// Begin the enumeration process
 			if err := enumeration.Start(); err != nil {
@@ -135,10 +124,16 @@ func workOnJobs(jobs <-chan ScannerScaffolding.ScanJob, results chan<- ScannerSc
 				logger.Error(err)
 				failures <- createJobFailure(job.JobId, "Failed to start amass scan", err.Error())
 			}
+
+			logger.Debug("Started scan. Waiting for results to come in.")
+			for result := range enumeration.Output {
+				logger.Debugf("Found subdomain '%s'", result.Name)
+				findings = append(findings, CreateFinding(result))
+			}
+
+			logger.Debugf("All scan results for '%s' are in. Waiting until amass marks itself as done.", target.Location)
 			enumeration.Done()
 		}
-
-		logger.Infof("Subdomainscan '%s' found %d subdomains.", job.JobId, len(findings))
 
 		results <- ScannerScaffolding.JobResult{
 			JobId:       job.JobId,
