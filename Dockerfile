@@ -12,7 +12,14 @@ COPY main.go main.go
 COPY ScannerScaffolding/ ./ScannerScaffolding/
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GO111MODULE=on go build main.go
 
+FROM golang AS healthCheckbuilder
+COPY healthcheck.go healthcheck.go
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -installsuffix cgo -o healthcheck healthcheck.go
+
 FROM gcr.io/distroless/static@sha256:c6d5981545ce1406d33e61434c61e9452dad93ecd8397c41e89036ef977a88f4
+
+COPY --from=healthCheckbuilder /go/healthcheck /scanner-infrastructure-amass/healthcheck
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 CMD [ "/scanner-infrastructure-amass/healthcheck" ]
 
 COPY --from=builder /go/src/github.com/secureCodeBox/scanner-infrastructure-amass/main /scanner-infrastructure-amass/main
 
