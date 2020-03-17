@@ -56,6 +56,7 @@ func CreateFinding(amassResult *requests.Output) ScannerScaffolding.Finding {
 	attributes["NAME"] = amassResult.Name
 	attributes["SOURCE"] = amassResult.Source
 	attributes["DOMAIN"] = amassResult.Domain
+	attributes["SUBDOMAIN"] = amassResult.Name
 	attributes["ADDRESSES"] = addresses
 
 	return ScannerScaffolding.Finding{
